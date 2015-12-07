@@ -15,12 +15,36 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     @IBOutlet weak var travelLocationsMapView: MKMapView!
     
-    
     // MARK: - UI Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        travelLocationsMapView.delegate = self
+        
+        // Add and configure gesture recognizers
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: "addPin:")
+        longPressGesture.minimumPressDuration = 1.0
+        travelLocationsMapView.addGestureRecognizer(longPressGesture)
 
+    }
+    
+    
+    // MARK: - Actions
+    
+    func addPin(gestureRecognizer: UIGestureRecognizer) {
+        
+        if gestureRecognizer.state == UIGestureRecognizerState.Began {
+            
+            // Get point from gesture recognizer and convert to map coordinates
+            let point = gestureRecognizer.locationInView(travelLocationsMapView)
+            let coordinates = travelLocationsMapView.convertPoint(point, toCoordinateFromView: travelLocationsMapView)
+            
+            // Create annotation from coordinates and add to map view
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = coordinates
+            travelLocationsMapView.addAnnotation(annotation)
+        }
     }
 
 
@@ -30,6 +54,18 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let reuseId = "pin"
         
         var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView!.animatesDrop = true
+            pinView!.draggable = true
+            pinView!.canShowCallout = true
+            
+            pinView!.pinTintColor = UIColor.redColor()
+            pinView!.rightCalloutAccessoryView = UIButton(type: .DetailDisclosure)
+        } else {
+            pinView!.annotation = annotation
+        }
         
         return pinView
     }
