@@ -13,10 +13,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate {
     
     // MARK: - Properties
     
-    let screenSize: CGRect = UIScreen.mainScreen().bounds
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapViewHeightContraint: NSLayoutConstraint!
-    
+    @IBOutlet weak var photoCollectionView: UICollectionView!
     
     // MARK: - UI Lifecycle
     override func viewDidLoad() {
@@ -25,5 +24,11 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate {
         // Configure map view height
         mapViewHeightContraint.constant = view.frame.height * 0.3
         
+    }
+    
+    // MARK: - IBActions
+    
+    @IBAction func getNewCollection(sender: AnyObject) {
+        print("bottom button pressed")
     }
 }

@@ -8,7 +8,7 @@
         <!--Virtual Tourist-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="MapViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Virtual Tourist" id="BYZ-38-t0r" customClass="MapViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="y3c-jy-aDJ"/>
                         <viewControllerLayoutGuide type="bottom" id="wfy-db-euE"/>
@@ -32,11 +32,7 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" title="Virtual Tourist" id="ebh-Ea-2Sw">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="foS-s6-QM7">
-                            <connections>
-                                <segue destination="Qvn-gk-sOP" kind="show" id="3zb-rB-827"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="backBarButtonItem" title="Back" id="0hJ-8V-3hc"/>
                     </navigationItem>
                     <connections>
                         <outlet property="travelLocationsMapView" destination="ypG-ud-MJL" id="xHz-mw-Uzv"/>
@@ -46,10 +42,10 @@
             </objects>
             <point key="canvasLocation" x="565" y="527"/>
         </scene>
-        <!--Photo Album View Controller-->
+        <!--Photo Album-->
         <scene sceneID="Yws-jo-dd5">
             <objects>
-                <viewController id="Qvn-gk-sOP" customClass="PhotoAlbumViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PhotoAlbumViewController" title="Photo Album" id="Qvn-gk-sOP" customClass="PhotoAlbumViewController" customModule="Virtual_Tourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="uGq-Io-cPp"/>
                         <viewControllerLayoutGuide type="bottom" id="9Xp-YZ-z24"/>
@@ -95,13 +91,17 @@
                                 </cells>
                             </collectionView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="OGb-4w-8dT">
-                                <rect key="frame" x="0.0" y="560" width="600" height="40"/>
+                                <rect key="frame" x="0.0" y="550" width="600" height="50"/>
                                 <animations/>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="40" id="5HZ-5X-GQh"/>
+                                    <constraint firstAttribute="height" constant="50" id="5HZ-5X-GQh"/>
                                 </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="19"/>
                                 <state key="normal" title="New Collection"/>
+                                <connections>
+                                    <action selector="getNewCollection:" destination="Qvn-gk-sOP" eventType="touchUpInside" id="PJJ-rQ-D6M"/>
+                                </connections>
                             </button>
                         </subviews>
                         <animations/>
@@ -122,6 +122,7 @@
                     <connections>
                         <outlet property="mapView" destination="3oW-fZ-8dB" id="0g1-8l-jq2"/>
                         <outlet property="mapViewHeightContraint" destination="Iey-4U-haU" id="Zyh-N9-ooA"/>
+                        <outlet property="photoCollectionView" destination="ETH-Wx-9Xn" id="0jU-k1-uvN"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cSC-a7-kF8" userLabel="First Responder" sceneMemberID="firstResponder"/>
