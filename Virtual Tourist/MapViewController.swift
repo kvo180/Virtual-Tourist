@@ -16,11 +16,15 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     @IBOutlet weak var mapView: MKMapView!
     var droppedPin: MKPointAnnotation!
     var dragged = false
+    var deleteMode = false
     
     // MARK: - UI Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        navigationItem.rightBarButtonItem = editButtonItem()
+        navigationItem.rightBarButtonItem!.enabled = false
         
         mapView.delegate = self
         
@@ -34,10 +38,38 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
+        
+        
+    }
+    
+    override func setEditing(editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        if editing {
+            // Slide up view to show 'Tap Pins to Delete' label
+            UIView.animateWithDuration(0.2, animations: { () -> Void in
+                self.view.frame.origin.y = -50.0
+            })
+            
+            // Enable delete mode
+            deleteMode = true
+            
+        }
+        else {
+            // Slide view back down
+            UIView.animateWithDuration(0.2, animations: { () -> Void in
+                self.view.frame.origin.y = +50.0
+            })
+            
+            // Disable delete mode
+            deleteMode = false
+            
+            // Disable Edit button if mapView has no more annotations
+            navigationItem.rightBarButtonItem!.enabled = mapView.annotations.count > 0
+        }
     }
     
     // MARK: - Actions
-    
     func addPin(gestureRecognizer: UIGestureRecognizer) {
         
         // Get point from gesture recognizer and convert to map coordinates
@@ -57,7 +89,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             dispatch_async(dispatch_get_main_queue()) {
                 self.mapView.addAnnotation(self.droppedPin)
+                self.navigationItem.rightBarButtonItem!.enabled = true
             }
+            print("annotation added")
             
         case .Changed:
             print("gesture changed")
@@ -66,7 +100,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 // Update annotation coordinates
                 dispatch_async(dispatch_get_main_queue()) {
                     self.droppedPin.coordinate = coordinates
-                    print(self.droppedPin.coordinate)
                 }
             }
             
@@ -118,6 +151,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             // Delete old photos from pin
             
         case .Canceling, .Ending:
+            print("drag ended")
+            
             let draggedAnnotation = view.annotation
             print("annotation dropped at: \(draggedAnnotation!.coordinate.latitude), \(draggedAnnotation!.coordinate.longitude)")
             
@@ -134,20 +169,29 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
         print("annotation view selected")
         
-        // Deselect annotation from map view so that it can be tapped again without having to first be deselected by the user
-        mapView.deselectAnnotation(view.annotation, animated: false)
-        
-        // Set annotation view as selected so that it is draggable
-        view.setSelected(true, animated: true)
-        
-        // If annotation view is selected by tapping (instead of by dragging), push PhotoAlbumViewController to top of nav stack
-        if dragged == false {
-            let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-            navigationController!.pushViewController(controller, animated: true)
-        } else {
-            // Set to false to enable push to PhotoAlbumViewController by tapping on annotation view
-            dragged = false
+        if deleteMode == false {
+            
+            // Deselect annotation from map view so that it can be tapped again without having to first be deselected by the user
+            mapView.deselectAnnotation(view.annotation, animated: false)
+            
+            // Set annotation view as selected so that it is draggable
+            view.setSelected(true, animated: true)
+            
+            // If annotation view is selected by tapping (instead of by dragging), push PhotoAlbumViewController to top of nav stack
+            if dragged == false {
+                let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+                navigationController!.pushViewController(controller, animated: true)
+            } else {
+                // If 'dragged' was true, set to false to enable push to PhotoAlbumViewController by tapping on annotation view
+                dragged = false
+            }
         }
+        
+        else {
+            mapView.removeAnnotation(view.annotation!)
+            print("annotation removed")
+        }
+        
     }
     
     func mapView(mapView: MKMapView, didDeselectAnnotationView view: MKAnnotationView) {
