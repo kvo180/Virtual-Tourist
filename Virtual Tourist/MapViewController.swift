@@ -72,51 +72,50 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     // MARK: - Actions
     func addPin(gestureRecognizer: UIGestureRecognizer) {
         
-        // Get point from gesture recognizer and convert to map coordinates
-        let point = gestureRecognizer.locationInView(mapView)
-        let coordinates = mapView.convertPoint(point, toCoordinateFromView: mapView)
-        
-        switch gestureRecognizer.state {
-        case .Began:
-            print("gesture began")
+        if deleteMode == false {
             
-            // Create annotation from coordinates and add to map view
-            droppedPin = MKPointAnnotation()
-            droppedPin.coordinate = coordinates
+            // Get point from gesture recognizer and convert to map coordinates
+            let point = gestureRecognizer.locationInView(mapView)
+            let coordinates = mapView.convertPoint(point, toCoordinateFromView: mapView)
             
-            // Set title property to make annotation draggable
-            droppedPin.title = "pin selected"
-            
-            dispatch_async(dispatch_get_main_queue()) {
-                self.mapView.addAnnotation(self.droppedPin)
-                self.navigationItem.rightBarButtonItem!.enabled = true
-            }
-            print("annotation added")
-            
-        case .Changed:
-            print("gesture changed")
-            
-            if droppedPin != nil {
-                // Update annotation coordinates
+            switch gestureRecognizer.state {
+            case .Began:
+                print("gesture began")
+                
+                // Create annotation from coordinates and add to map view
+                droppedPin = MKPointAnnotation()
+                droppedPin.coordinate = coordinates
+                
+                // Set title property to make annotation draggable
+                droppedPin.title = "pin selected"
+                
                 dispatch_async(dispatch_get_main_queue()) {
-                    self.droppedPin.coordinate = coordinates
+                    self.mapView.addAnnotation(self.droppedPin)
+                    self.navigationItem.rightBarButtonItem!.enabled = true
                 }
+                print("annotation added")
+                
+            case .Changed:
+                print("gesture changed")
+                
+                if droppedPin != nil {
+                    // Update annotation coordinates
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.droppedPin.coordinate = coordinates
+                    }
+                }
+                
+            case .Ended:
+                print("gesture ended")
+                
+                // Save pin and fetch images
+                
+            default:
+                return
             }
-            
-        case .Ended:
-            print("gesture ended")
-            
-            // Save pin and fetch images
-            
-        default:
-            return
         }
     }
     
-    
-    // MARK: - Helper Methods
-    
-
 
     // MARK: MKMapViewViewDelegate Methods
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
@@ -179,8 +178,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             // If annotation view is selected by tapping (instead of by dragging), push PhotoAlbumViewController to top of nav stack
             if dragged == false {
-                let controller = storyboard!.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-                navigationController!.pushViewController(controller, animated: true)
+                
+                performSegueWithIdentifier("showAlbum", sender: view)
+                
             } else {
                 // If 'dragged' was true, set to false to enable push to PhotoAlbumViewController by tapping on annotation view
                 dragged = false
@@ -198,5 +198,19 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         print("annotation view deselected")
     }
     
+    
+    // MARK: - Segue
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if segue.identifier == "showAlbum" {
+            
+            let photoAlbumVC = segue.destinationViewController as! PhotoAlbumViewController
+            
+            photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
+        }
+    }
+    
+    
+    // MARK: - Helper Methods
+
 }
 

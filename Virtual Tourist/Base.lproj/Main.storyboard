@@ -47,6 +47,7 @@
                     </navigationItem>
                     <connections>
                         <outlet property="mapView" destination="ypG-ud-MJL" id="44S-iu-KR7"/>
+                        <segue destination="Qvn-gk-sOP" kind="show" identifier="showAlbum" id="SyC-xU-xFy"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -65,20 +66,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" zoomEnabled="NO" scrollEnabled="NO" rotateEnabled="NO" pitchEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3oW-fZ-8dB">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="120"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="120" id="Iey-4U-haU"/>
-                                    <constraint firstAttribute="height" constant="120" id="eBm-kT-eOK"/>
-                                </constraints>
-                                <variation key="default">
-                                    <mask key="constraints">
-                                        <exclude reference="eBm-kT-eOK"/>
-                                    </mask>
-                                </variation>
-                            </mapView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="ETH-Wx-9Xn">
-                                <rect key="frame" x="0.0" y="120" width="600" height="480"/>
+                                <rect key="frame" x="0.0" y="184" width="600" height="416"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="Qgm-F6-K9v">
                                     <size key="itemSize" width="50" height="50"/>
                                     <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -109,10 +98,23 @@
                                     <action selector="getNewCollection:" destination="Qvn-gk-sOP" eventType="touchUpInside" id="PJJ-rQ-D6M"/>
                                 </connections>
                             </button>
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" zoomEnabled="NO" scrollEnabled="NO" rotateEnabled="NO" pitchEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3oW-fZ-8dB">
+                                <rect key="frame" x="0.0" y="64" width="600" height="120"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="120" id="Iey-4U-haU"/>
+                                    <constraint firstAttribute="height" constant="120" id="eBm-kT-eOK"/>
+                                </constraints>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="eBm-kT-eOK"/>
+                                    </mask>
+                                </variation>
+                            </mapView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="OGb-4w-8dT" firstAttribute="leading" secondItem="c7q-Jl-qd3" secondAttribute="leading" id="2ig-Eo-BjI"/>
+                            <constraint firstItem="3oW-fZ-8dB" firstAttribute="top" secondItem="uGq-Io-cPp" secondAttribute="bottom" id="5fU-ay-sHv"/>
                             <constraint firstItem="3oW-fZ-8dB" firstAttribute="leading" secondItem="c7q-Jl-qd3" secondAttribute="leading" id="99d-f9-lOS"/>
                             <constraint firstItem="ETH-Wx-9Xn" firstAttribute="leading" secondItem="c7q-Jl-qd3" secondAttribute="leading" id="Du0-9E-2Hd"/>
                             <constraint firstAttribute="trailing" secondItem="OGb-4w-8dT" secondAttribute="trailing" id="KsK-i8-6Zy"/>
@@ -123,6 +125,11 @@
                             <constraint firstItem="ETH-Wx-9Xn" firstAttribute="top" secondItem="3oW-fZ-8dB" secondAttribute="bottom" id="npY-nv-d28"/>
                             <constraint firstAttribute="trailing" secondItem="3oW-fZ-8dB" secondAttribute="trailing" id="rtK-z0-iDI"/>
                         </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="dNX-zg-FsD"/>
+                            </mask>
+                        </variation>
                     </view>
                     <connections>
                         <outlet property="mapView" destination="3oW-fZ-8dB" id="0g1-8l-jq2"/>
