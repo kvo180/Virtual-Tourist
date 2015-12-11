@@ -53,7 +53,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             // Enable delete mode
             deleteMode = true
-            
         }
         else {
             // Slide view back down
@@ -108,7 +107,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             case .Ended:
                 print("gesture ended")
                 
-                // Save pin and fetch images
+                // Save pin and pre-fetch images
+                
+                // Get images from Flickr
+                let latitude = coordinates.latitude as Double
+                let longitude = coordinates.longitude as Double
+                FlickrClient.sharedInstance().getImagesByLocation(latitude, longitude: longitude) {
+                    (success, errorString) in
+                    
+                    if success {
+                        print("Photos downloaded successfully.")
+                    }
+                    else {
+                        print(errorString)
+                    }
+                }
                 
             default:
                 return
@@ -157,8 +170,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             // Since annotation view will be automatically selected after dragging occurs, set to true so that push to PhotoAlbumViewController doesn't occur
             dragged = true
-
-            // Get new photos for pin
+            
+            // Delete previously pre-fetched photos
+            // Pre-fetch new photos for pin
             
         default:
             return
