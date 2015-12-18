@@ -229,13 +229,34 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             if success {
                 
+                // Filter out photo objects that don't have an imageURLString or don't have an image at its URL
                 for photo in photosArray {
-                    let photoObject = Photo(dictionary: photo)
-                    selectedPin.photos.append(photoObject)
+                    
+                    // Check if photo object contains an imageURLString
+                    if let imageURLString = photo[FlickrClient.JSONResponseKeys.ImageURL] as? String {
+                        
+                        // Check if image exists at URL
+                        let imageURL = NSURL(string: imageURLString)
+                        if let imageData = NSData(contentsOfURL: imageURL!) {
+                            
+                            let image = UIImage(data: imageData)
+                            
+                            let photoObject = Photo(dictionary: photo, image: image!)
+                            selectedPin.photos.append(photoObject)
+                        }
+                            
+                        else {
+                            print("Image does not exist at \(imageURL).")
+                        }
+                    }
+                        
+                    else {
+                        print("Photo object does not contain an imageURLString.")
+                    }
                 }
-                
                 print("Photos downloaded successfully.")
             }
+                
             else {
                 print(errorString)
             }
