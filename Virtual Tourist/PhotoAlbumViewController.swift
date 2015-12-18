@@ -17,10 +17,12 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     @IBOutlet weak var mapViewHeightContraint: NSLayoutConstraint!
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    @IBOutlet weak var noImagesLabel: UILabel!
     var pin: Pin!
     var width: CGFloat!
     var height: CGFloat!
     var coordinate = CLLocationCoordinate2D()
+    var photosFound = Bool()
 
     // MARK: - UI Lifecycle
     override func viewDidLoad() {
@@ -48,26 +50,18 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         
         automaticallyAdjustsScrollViewInsets = false
         
-//        // Get images from Flickr
-//        let latitude = coordinate.latitude as Double
-//        let longitude = coordinate.longitude as Double
-//        FlickrClient.sharedInstance().getImagesByLocation(latitude, longitude: longitude) {
-//            (success, errorString) in
-//            
-//            if success {
-//                print("Photos downloaded successfully.")
-//            }
-//            else {
-//                print(errorString)
-//            }
-//        }
+        // Hide noImagesLabel
+        noImagesLabel.hidden = true
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
-        if pin.photos.isEmpty {
-            
+        // Hide/show 'No images found' label
+        if photosFound {
+            noImagesLabel.hidden = true
+        } else {
+            noImagesLabel.hidden = false
         }
     }
     

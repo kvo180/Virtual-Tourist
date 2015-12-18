@@ -18,6 +18,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var deleteMode = false
     var pin: Pin!
     var pins = [Pin]()
+    var photosFound = Bool()
     
     // MARK: - UI Lifecycle
     
@@ -213,6 +214,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
             photoAlbumVC.pin = sender!.annotation as! Pin
+            photoAlbumVC.photosFound = photosFound
         }
     }
     
@@ -225,36 +227,46 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let latitude = selectedPin.coordinate.latitude as Double
         let longitude = selectedPin.coordinate.longitude as Double
         FlickrClient.sharedInstance().getImagesByLocation(latitude, longitude: longitude) {
-            (success, photosArray, errorString) in
+            (success, photosArray, imagesFound, errorString) in
             
             if success {
                 
-                // Filter out photo objects that don't have an imageURLString or don't have an image at its URL
-                for photo in photosArray {
+                if imagesFound {
                     
-                    // Check if photo object contains an imageURLString
-                    if let imageURLString = photo[FlickrClient.JSONResponseKeys.ImageURL] as? String {
+                    self.photosFound = true
+                    
+                    // Filter out photo objects that don't have an imageURLString or don't have an image at its URL
+                    for photo in photosArray {
                         
-                        // Check if image exists at URL
-                        let imageURL = NSURL(string: imageURLString)
-                        if let imageData = NSData(contentsOfURL: imageURL!) {
+                        // Check if photo object contains an imageURLString
+                        if let imageURLString = photo[FlickrClient.JSONResponseKeys.ImageURL] as? String {
                             
-                            let image = UIImage(data: imageData)
-                            
-                            let photoObject = Photo(dictionary: photo, image: image!)
-                            selectedPin.photos.append(photoObject)
+                            // Check if image exists at URL
+                            let imageURL = NSURL(string: imageURLString)
+                            if let imageData = NSData(contentsOfURL: imageURL!) {
+                                
+                                let image = UIImage(data: imageData)
+                                
+                                let photoObject = Photo(dictionary: photo, image: image!)
+                                selectedPin.photos.append(photoObject)
+                            }
+                                
+                            else {
+                                print("Image does not exist at \(imageURL).")
+                            }
                         }
                             
                         else {
-                            print("Image does not exist at \(imageURL).")
+                            print("Photo object does not contain an imageURLString.")
                         }
                     }
-                        
-                    else {
-                        print("Photo object does not contain an imageURLString.")
-                    }
+                    print("Photos downloaded successfully.")
                 }
-                print("Photos downloaded successfully.")
+                
+                else {
+                    print("No images found.")
+                    self.photosFound = false
+                }
             }
                 
             else {
