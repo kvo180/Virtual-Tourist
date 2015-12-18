@@ -14,9 +14,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     // MARK:  Properties
     
     @IBOutlet weak var mapView: MKMapView!
-    var droppedPin: MKPointAnnotation!
     var dragged = false
     var deleteMode = false
+    var pin: Pin!
+    var pins = [Pin]()
     
     // MARK: - UI Lifecycle
     
@@ -68,6 +69,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
     }
     
+    
     // MARK: - Actions
     func addPin(gestureRecognizer: UIGestureRecognizer) {
         
@@ -81,15 +83,18 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             case .Began:
                 print("gesture began")
                 
-                // Create annotation from coordinates and add to map view
-                droppedPin = MKPointAnnotation()
-                droppedPin.coordinate = coordinates
+                // Create pin object from coordinates and add to map view
+                pin = Pin()
+                pin.coordinate = coordinates
                 
                 // Set title property to make annotation draggable
-                droppedPin.title = "pin selected"
+                pin.title = "pin"
+                
+                // Add pin to array
+                pins.append(pin)
                 
                 dispatch_async(dispatch_get_main_queue()) {
-                    self.mapView.addAnnotation(self.droppedPin)
+                    self.mapView.addAnnotation(self.pin)
                     self.navigationItem.rightBarButtonItem!.enabled = true
                 }
                 print("annotation added")
@@ -97,10 +102,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             case .Changed:
                 print("gesture changed")
                 
-                if droppedPin != nil {
+                if pin != nil {
                     // Update annotation coordinates
                     dispatch_async(dispatch_get_main_queue()) {
-                        self.droppedPin.coordinate = coordinates
+                        self.pin.coordinate = coordinates
                     }
                 }
                 
@@ -108,20 +113,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 print("gesture ended")
                 
                 // Save pin and pre-fetch images
-                
-                // Get images from Flickr
-                let latitude = coordinates.latitude as Double
-                let longitude = coordinates.longitude as Double
-                FlickrClient.sharedInstance().getImagesByLocation(latitude, longitude: longitude) {
-                    (success, errorString) in
-                    
-                    if success {
-                        print("Photos downloaded successfully.")
-                    }
-                    else {
-                        print(errorString)
-                    }
-                }
+                getImagesFromFlickr(pin)
                 
             default:
                 return
@@ -130,7 +122,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
     
 
-    // MARK: MKMapViewViewDelegate Methods
+    // MARK: - MKMapViewViewDelegate Methods
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         
         let reuseId = "pin"
@@ -156,11 +148,14 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
+        let selectedPin = view.annotation as! Pin
+        
         switch newState {
         case .Starting:
             print("drag starting")
             
             // Delete old photos from pin
+            selectedPin.photos = []
             
         case .Canceling, .Ending:
             print("drag ended")
@@ -171,8 +166,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             // Since annotation view will be automatically selected after dragging occurs, set to true so that push to PhotoAlbumViewController doesn't occur
             dragged = true
             
-            // Delete previously pre-fetched photos
             // Pre-fetch new photos for pin
+            getImagesFromFlickr(selectedPin)
             
         default:
             return
@@ -180,7 +175,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        print("annotation view selected")
         
         if deleteMode == false {
             
@@ -202,14 +196,12 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
         
         else {
-            mapView.removeAnnotation(view.annotation!)
+            let selectedPin = view.annotation as! Pin
+            pins.removeAtIndex(pins.indexOf(selectedPin)!)
             print("annotation removed")
+            
+            mapView.removeAnnotation(view.annotation!)
         }
-        
-    }
-    
-    func mapView(mapView: MKMapView, didDeselectAnnotationView view: MKAnnotationView) {
-        print("annotation view deselected")
     }
     
     
@@ -220,11 +212,35 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             let photoAlbumVC = segue.destinationViewController as! PhotoAlbumViewController
             
             photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
+            photoAlbumVC.pin = sender!.annotation as! Pin
         }
     }
     
     
     // MARK: - Helper Methods
+    
+    // Get images from Flickr
+    func getImagesFromFlickr(selectedPin: Pin) {
+        
+        let latitude = selectedPin.coordinate.latitude as Double
+        let longitude = selectedPin.coordinate.longitude as Double
+        FlickrClient.sharedInstance().getImagesByLocation(latitude, longitude: longitude) {
+            (success, photosArray, errorString) in
+            
+            if success {
+                
+                for photo in photosArray {
+                    let photoObject = Photo(dictionary: photo)
+                    selectedPin.photos.append(photoObject)
+                }
+                
+                print("Photos downloaded successfully.")
+            }
+            else {
+                print(errorString)
+            }
+        }
+    }
 
 }
 

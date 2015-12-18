@@ -13,7 +13,7 @@ import UIKit
 extension FlickrClient {
     
     // MARK: - GET Images by Lat/Lon Data
-    func getImagesByLocation(latitude: Double, longitude: Double, completionHandler: (success: Bool, errorString: String?) -> Void) {
+    func getImagesByLocation(latitude: Double, longitude: Double, completionHandler: (success: Bool, photosArray: [[String: AnyObject]], errorString: String?) -> Void) {
         
         // Set the parameters
         methodArguments[ParameterKeys.BBox] = createBoundingBoxString(latitude, longitude: longitude)
@@ -23,7 +23,7 @@ extension FlickrClient {
         getImagesFromFlickrBySearch(request) { (result, error) in
             
             if let error = error {
-                completionHandler(success: false, errorString: error.localizedDescription)
+                completionHandler(success: false, photosArray: [], errorString: error.localizedDescription)
             } else {
                 // Check if result contains 'photos' key
                 if let photosDictionary = result[JSONResponseKeys.Photos] as? NSDictionary {
@@ -37,27 +37,22 @@ extension FlickrClient {
                             // Check if results contain an array of photo dictionaries
                             if let photosArray = photosDictionary[JSONResponseKeys.Photo] as? [[String: AnyObject]] {
                                 
-                                for photo in photosArray {
-                                    let photoObject = Photo(dictionary: photo)
-                                    self.photoAlbum.append(photoObject)
-                                }
-                                
-                                completionHandler(success: true, errorString: nil)
+                                completionHandler(success: true, photosArray: photosArray, errorString: nil)
                             }
                             else {
                                 print("Cannot find key \(JSONResponseKeys.Photo) in \(photosDictionary)")
-                                completionHandler(success: false, errorString: "Server results did not contain any photo data.")
+                                completionHandler(success: false, photosArray: [], errorString: "Server results did not contain any photo data.")
                             }
                         }
                         else {
                             print("No images have been returned")
-                            completionHandler(success: true, errorString: nil)
+                            completionHandler(success: true, photosArray: [], errorString: nil)
                         }
                     }
                 }
                 else {
                     print("Cannot find key \(JSONResponseKeys.Photos) in \(result)")
-                    completionHandler(success: false, errorString: "No results returned from server.")
+                    completionHandler(success: false, photosArray: [], errorString: "No results returned from server.")
                 }
             }
         }

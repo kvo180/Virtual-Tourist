@@ -21,7 +21,6 @@ class FlickrClient: NSObject {
         "extras": ParameterKeys.PhotoSize
     ]
     var session: NSURLSession!
-    var photoAlbum = [Photo]()
     
     // MARK: - Initializers
     override init() {

@@ -27,7 +27,7 @@ extension FlickrClient {
     struct ParameterKeys {
         
         static let NoJSONCallback = "1"
-        static let PhotoSize = "url_m"
+        static let PhotoSize = "url_z"
         static let SafeSearch = "1"
         static let DataFormat = "json"
         static let PerPage = "30"
@@ -40,7 +40,7 @@ extension FlickrClient {
         
         static let Title = "title"
         static let ID = "id"
-        static let ImageURL = "url_m"
+        static let ImageURL = "url_z"
         static let Photos = "photos"
         static let Total = "total"
         static let Photo = "photo"

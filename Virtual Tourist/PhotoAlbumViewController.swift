@@ -17,6 +17,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     @IBOutlet weak var mapViewHeightContraint: NSLayoutConstraint!
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
+    var pin: Pin!
     var width: CGFloat!
     var height: CGFloat!
     var coordinate = CLLocationCoordinate2D()
@@ -62,6 +63,15 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
 //        }
     }
     
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        if pin.photos.isEmpty {
+            
+        }
+    }
+    
+    
     // MARK: - IBActions
     
     @IBAction func getNewCollection(sender: AnyObject) {
@@ -71,12 +81,12 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     // MARK: UICollectionViewDelegate/DataSource Methods
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return FlickrClient.sharedInstance().photoAlbum.count
+        return pin.photos.count
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
 //        
-        let photo = FlickrClient.sharedInstance().photoAlbum[indexPath.row]
+        let photo = pin.photos[indexPath.row]
 //        var image = UIImage()
 //        
 //        if photo.imageURLString == nil || photo.image == "" {

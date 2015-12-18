@@ -7,7 +7,9 @@
 //
 
 import UIKit
+import MapKit
 
-class Pin {
-    
+class Pin: MKPointAnnotation {
+
+    var photos = [Photo]()
 }
