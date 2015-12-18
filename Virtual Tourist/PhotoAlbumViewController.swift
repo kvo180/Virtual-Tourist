@@ -100,5 +100,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         print("item selected at indexpath: \(indexPath)")
+        
+        // Show PhotoDetailViewController with selected photo
+        let detailVC = storyboard?.instantiateViewControllerWithIdentifier("PhotoDetailViewController") as! PhotoDetailViewController
+        
+        detailVC.photoAlbum = pin.photos
+        detailVC.imageIndex = indexPath.row
+        
+        navigationController!.pushViewController(detailVC, animated: true)
     }
 }
