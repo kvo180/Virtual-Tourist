@@ -74,6 +74,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     
     // MARK: UICollectionViewDelegate/DataSource Methods
+    
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return pin.photos.count
     }
@@ -99,14 +100,17 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        print("item selected at indexpath: \(indexPath)")
+        
+        performSegueWithIdentifier("showPhoto", sender: indexPath)
+    }
+    
+    
+    // MARK: - Segue
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         // Show PhotoDetailViewController with selected photo
-        let detailVC = storyboard?.instantiateViewControllerWithIdentifier("PhotoDetailViewController") as! PhotoDetailViewController
-        
+        let detailVC = segue.destinationViewController as! PhotoDetailViewController
         detailVC.photoAlbum = pin.photos
-        detailVC.imageIndex = indexPath.row
-        
-        navigationController!.pushViewController(detailVC, animated: true)
+        detailVC.imageIndex = (sender as! NSIndexPath).row
     }
 }
