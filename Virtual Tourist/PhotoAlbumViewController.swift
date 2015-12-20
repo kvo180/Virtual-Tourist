@@ -105,15 +105,36 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     
     // MARK: - IBActions
-    
-    @IBAction func getNewCollection(sender: AnyObject) {
+    @IBAction func bottomButtonTouchUp(sender: AnyObject) {
         
         if deleteMode == true {
-            // removeSelectedPhotos
+            removeSelectedPhotos()
         }
         else {
             // getNewCollection
         }
+    }
+    
+    
+    // MARK: - Helper Methods
+    func removeSelectedPhotos() {
+        // Get array of selected indexPaths (sorted descendingly in order to prevent array index out of range)
+        let deleteIndexPaths = photoCollectionView.indexPathsForSelectedItems()!.sort({
+            return $0.row > $1.row
+        })
+
+        for indexPath in deleteIndexPaths {
+            print(indexPath.row)
+            
+            pin.photos.removeAtIndex(indexPath.row)
+        }
+
+        photoCollectionView.deleteItemsAtIndexPaths(deleteIndexPaths)
+        print("photos removed: \(deleteIndexPaths.count)")
+        
+        // Configure bottom button
+        bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
+        bottomButton.enabled = false
     }
     
     
@@ -124,7 +145,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-
+        
+        let reuseID = "PhotoCell"
+ 
         let photo = pin.photos[indexPath.row]
         
 //        var image = UIImage()
@@ -135,8 +158,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
 //            image = photo.image!
 //        }
         
-        
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseID, forIndexPath: indexPath) as! PhotoCell
         
         cell.photoImageView.image = photo.image
         
@@ -151,7 +173,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         }
             
         else {
-            
+            print("selected item: \(indexPath.row)")
             // Configure bottom button
             if !collectionView.indexPathsForSelectedItems()!.isEmpty {
                 bottomButton.setTitle("Remove Selected Photos", forState: .Normal)

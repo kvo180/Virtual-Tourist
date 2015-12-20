@@ -170,7 +170,7 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="19"/>
                                 <state key="normal" title="New Collection"/>
                                 <connections>
-                                    <action selector="getNewCollection:" destination="Qvn-gk-sOP" eventType="touchUpInside" id="PJJ-rQ-D6M"/>
+                                    <action selector="bottomButtonTouchUp:" destination="Qvn-gk-sOP" eventType="touchUpInside" id="TWf-f5-IaX"/>
                                 </connections>
                             </button>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" zoomEnabled="NO" scrollEnabled="NO" rotateEnabled="NO" pitchEnabled="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3oW-fZ-8dB">
