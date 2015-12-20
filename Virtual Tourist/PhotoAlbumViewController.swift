@@ -139,25 +139,18 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
         
         cell.photoImageView.image = photo.image
-        cell.layer.borderWidth = 0
-        cell.alpha = 1.0
         
         return cell
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
-        let cell = photoCollectionView.cellForItemAtIndexPath(indexPath)!
-        
         if deleteMode == false {
-            cell.selected = false
             collectionView.deselectItemAtIndexPath(indexPath, animated: true)
             performSegueWithIdentifier("showPhoto", sender: indexPath)
         }
+            
         else {
-            // Enable user to select images to delete
-            cell.layer.borderWidth = 3.0
-            cell.alpha = 0.5
             
             // Configure bottom button
             if !collectionView.indexPathsForSelectedItems()!.isEmpty {
@@ -169,15 +162,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
         
-        let cell = photoCollectionView.cellForItemAtIndexPath(indexPath)!
-        
-        cell.layer.borderWidth = 0
-        cell.alpha = 1.0
-        
-        // Configure bottom button
-        if collectionView.indexPathsForSelectedItems()!.isEmpty {
-            bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
-            bottomButton.enabled = false
+        if deleteMode == true {
+            
+            // Configure bottom button
+            if collectionView.indexPathsForSelectedItems()!.isEmpty {
+                bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
+                bottomButton.enabled = false
+            }
         }
     }
     
