@@ -218,6 +218,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
             photoAlbumVC.pin = sender!.annotation as! Pin
             photoAlbumVC.photosFound = photosFound
+            photoAlbumVC.mapViewRegion = mapView.region
         }
     }
     

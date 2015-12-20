@@ -25,6 +25,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     var coordinate = CLLocationCoordinate2D()
     var pin: Pin!
     var photosFound = Bool()
+    var mapViewRegion = MKCoordinateRegion()
     
     // Global properties
     var width: CGFloat!
@@ -43,12 +44,15 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         
         // Configure map view
         mapViewHeightContraint.constant = view.frame.height * 0.22
+        
         var annotations = [MKPointAnnotation]()
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         annotations.append(annotation)
         mapView.showAnnotations(annotations, animated: true)
-        let region = MKCoordinateRegionMakeWithDistance(coordinate, 10000, 10000)
+        
+        let span = MKCoordinateSpanMake(mapViewRegion.span.latitudeDelta * 0.2, mapViewRegion.span.longitudeDelta * 0.2)
+        let region = MKCoordinateRegionMake(coordinate, span)
         mapView.setRegion(region, animated: true)
         
         // Configure collection view
@@ -118,14 +122,12 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     // MARK: - Helper Methods
     func removeSelectedPhotos() {
-        // Get array of selected indexPaths (sorted descendingly in order to prevent array index out of range)
+        // Get array of selected indexPaths (sorted descendingly in order to prevent array index out of range and to preserve correct indexPath reference)
         let deleteIndexPaths = photoCollectionView.indexPathsForSelectedItems()!.sort({
             return $0.row > $1.row
         })
 
         for indexPath in deleteIndexPaths {
-            print(indexPath.row)
-            
             pin.photos.removeAtIndex(indexPath.row)
         }
 
