@@ -13,20 +13,33 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     // MARK: - Properties
     
+    // IBActions
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var mapViewHeightContraint: NSLayoutConstraint!
     @IBOutlet weak var photoCollectionView: UICollectionView!
     @IBOutlet weak var flowLayout: UICollectionViewFlowLayout!
     @IBOutlet weak var noImagesLabel: UILabel!
+    @IBOutlet weak var bottomButton: UIButton!
+    
+    // Initialized by segue
+    var coordinate = CLLocationCoordinate2D()
     var pin: Pin!
+    var photosFound = Bool()
+    
+    // Global properties
     var width: CGFloat!
     var height: CGFloat!
-    var coordinate = CLLocationCoordinate2D()
-    var photosFound = Bool()
-
+    var deleteMode = false
+    
+    
     // MARK: - UI Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        automaticallyAdjustsScrollViewInsets = false
+        
+        // Configure nav bar button
+        navigationItem.rightBarButtonItem = editButtonItem()
         
         // Configure map view
         mapViewHeightContraint.constant = view.frame.height * 0.22
@@ -48,7 +61,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         flowLayout.minimumLineSpacing = spacing
         flowLayout.itemSize = CGSizeMake(width, height)
         
-        automaticallyAdjustsScrollViewInsets = false
+        photoCollectionView.allowsMultipleSelection = true
         
         // Hide noImagesLabel
         noImagesLabel.hidden = true
@@ -65,11 +78,42 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         }
     }
     
+
+    // MARK: - Set Editing
+    override func setEditing(editing: Bool, animated: Bool) {
+        super.setEditing(editing, animated: animated)
+        
+        if editing {
+            deleteMode = true
+            
+            // Configure bottom button
+            bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
+            bottomButton.enabled = false
+            bottomButton.setTitleColor(UIColor.redColor(), forState: .Normal)
+        }
+        else {
+            deleteMode = false
+            
+            // Reset collection view to deselect any cells that were selected
+            photoCollectionView.reloadData()
+            
+            // Configure bottom button
+            bottomButton.setTitle("New Collection", forState: .Normal)
+            bottomButton.setTitleColor(nil, forState: .Normal)
+        }
+    }
+    
     
     // MARK: - IBActions
     
     @IBAction func getNewCollection(sender: AnyObject) {
-        print("bottom button pressed")
+        
+        if deleteMode == true {
+            // removeSelectedPhotos
+        }
+        else {
+            // getNewCollection
+        }
     }
     
     
@@ -80,8 +124,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-//        
+
         let photo = pin.photos[indexPath.row]
+        
 //        var image = UIImage()
 //        
 //        if photo.imageURLString == nil || photo.image == "" {
@@ -94,14 +139,46 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("PhotoCell", forIndexPath: indexPath) as! PhotoCell
         
         cell.photoImageView.image = photo.image
-//        cell.photoImageView.image = image
+        cell.layer.borderWidth = 0
+        cell.alpha = 1.0
         
         return cell
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         
-        performSegueWithIdentifier("showPhoto", sender: indexPath)
+        let cell = photoCollectionView.cellForItemAtIndexPath(indexPath)!
+        
+        if deleteMode == false {
+            cell.selected = false
+            collectionView.deselectItemAtIndexPath(indexPath, animated: true)
+            performSegueWithIdentifier("showPhoto", sender: indexPath)
+        }
+        else {
+            // Enable user to select images to delete
+            cell.layer.borderWidth = 3.0
+            cell.alpha = 0.5
+            
+            // Configure bottom button
+            if !collectionView.indexPathsForSelectedItems()!.isEmpty {
+                bottomButton.setTitle("Remove Selected Photos", forState: .Normal)
+                bottomButton.enabled = true
+            }
+        }
+    }
+    
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        
+        let cell = photoCollectionView.cellForItemAtIndexPath(indexPath)!
+        
+        cell.layer.borderWidth = 0
+        cell.alpha = 1.0
+        
+        // Configure bottom button
+        if collectionView.indexPathsForSelectedItems()!.isEmpty {
+            bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
+            bottomButton.enabled = false
+        }
     }
     
     

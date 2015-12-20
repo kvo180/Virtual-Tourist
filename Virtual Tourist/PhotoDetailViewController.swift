@@ -22,10 +22,11 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-    
+        
+        automaticallyAdjustsScrollViewInsets = false
+        
         // Configure scroll view
         scrollView.frame = CGRectMake(0, 0, view.frame.width, view.frame.height - navigationController!.navigationBar.frame.height - 150)
-        print(scrollView.frame)
         let scrollViewWidth: CGFloat = scrollView.frame.width
         let scrollViewHeight: CGFloat = scrollView.frame.height
         
@@ -34,7 +35,6 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
         for (index, photo) in photoAlbum.enumerate() {
             
             let imageView = UIImageView(frame: CGRectMake(scrollViewWidth * CGFloat(index), scrollView.frame.origin.y, scrollViewWidth, scrollViewHeight))
-            print(imageView.frame)
             imageView.image = photo.image
             imageView.contentMode = UIViewContentMode.ScaleAspectFit
             imageView.clipsToBounds = true
@@ -62,7 +62,5 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
         let currentPage:CGFloat = floor((scrollView.contentOffset.x - pageWidth / 2) / pageWidth) + 1
         let currentPhoto = photoAlbum[Int(currentPage)]
         titleLabel.text = currentPhoto.title
-
     }
-    
 }

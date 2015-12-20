@@ -141,12 +141,10 @@
                                             <subviews>
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="T4o-xl-Re8">
                                                     <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
-                                                    <color key="backgroundColor" red="0.1176470588" green="0.25490196079999999" blue="0.5450980392" alpha="1" colorSpace="calibratedRGB"/>
                                                 </imageView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
-                                        <color key="backgroundColor" red="0.1176470588" green="0.25490196079999999" blue="0.5450980392" alpha="1" colorSpace="calibratedRGB"/>
                                         <constraints>
                                             <constraint firstItem="T4o-xl-Re8" firstAttribute="leading" secondItem="68p-Rn-p1t" secondAttribute="leading" id="5GF-8q-hwl"/>
                                             <constraint firstAttribute="trailing" secondItem="T4o-xl-Re8" secondAttribute="trailing" id="cLr-jN-Zd3"/>
@@ -219,6 +217,7 @@
                         </variation>
                     </view>
                     <connections>
+                        <outlet property="bottomButton" destination="OGb-4w-8dT" id="Q5L-4W-GpG"/>
                         <outlet property="flowLayout" destination="Qgm-F6-K9v" id="xsZ-d4-cWL"/>
                         <outlet property="mapView" destination="3oW-fZ-8dB" id="0g1-8l-jq2"/>
                         <outlet property="mapViewHeightContraint" destination="Iey-4U-haU" id="Zyh-N9-ooA"/>

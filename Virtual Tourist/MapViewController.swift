@@ -25,6 +25,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Configure nav bar buttons
         navigationItem.rightBarButtonItem = editButtonItem()
         navigationItem.rightBarButtonItem!.enabled = false
         
@@ -44,6 +45,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
     }
     
+    
+    // MARK: - Set Editing
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
