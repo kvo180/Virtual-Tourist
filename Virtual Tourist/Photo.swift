@@ -12,9 +12,9 @@ class Photo {
     
     var title = ""
     var id = 0
-    var image: UIImage?
+    var imageURLString = ""
     
-    init(dictionary: [String : AnyObject], image: UIImage) {
+    init(dictionary: [String : AnyObject]) {
         
         title = dictionary[FlickrClient.JSONResponseKeys.Title] as! String
         if title == "" {
@@ -23,7 +23,7 @@ class Photo {
         
         id = Int(dictionary[FlickrClient.JSONResponseKeys.ID] as! String)!
         
-        self.image = image
+        imageURLString = dictionary[FlickrClient.JSONResponseKeys.ImageURL] as! String
     }
     
 //    var image: UIImage? {

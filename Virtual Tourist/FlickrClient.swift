@@ -32,7 +32,7 @@ class FlickrClient: NSObject {
     // MARK: - Flickr API Method
     
     /* Since Flickr only allows a maximum of 4000 photos per search query, a per_page setting of 30 images per page will result in a maximum of 134 pages. First select a random page number, then call getImagesFromFlickrBySearchWithPage to get images for that particular page. */
-    func getImagesFromFlickrBySearch(request: NSMutableURLRequest, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
+    func getPhotosFromFlickrBySearch(request: NSMutableURLRequest, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
         
         // Initialize task for getting data
         let task = session.dataTaskWithRequest(request) { (data, response, error) in
@@ -93,7 +93,7 @@ class FlickrClient: NSObject {
                 let randomPage = Int(arc4random_uniform(UInt32(pageLimit))) + 1
                 self.methodArguments[ParameterKeys.Page] = randomPage
                 let request = self.configureURLRequestForGETImagesByLocation()
-                self.getImagesFromFlickrBySearchWithPage(request, completionHandler: completionHandler)
+                self.getPhotosFromFlickrBySearchWithPage(request, completionHandler: completionHandler)
             }
         }
         
@@ -101,7 +101,7 @@ class FlickrClient: NSObject {
     }
     
     // Get photos from a random page
-    func getImagesFromFlickrBySearchWithPage(request: NSMutableURLRequest, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
+    func getPhotosFromFlickrBySearchWithPage(request: NSMutableURLRequest, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
 
         // Initialize task for getting data
         let task = session.dataTaskWithRequest(request) { (data, response, error) in

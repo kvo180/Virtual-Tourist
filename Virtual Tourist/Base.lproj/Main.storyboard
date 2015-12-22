@@ -142,16 +142,22 @@
                                                 <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="T4o-xl-Re8">
                                                     <rect key="frame" x="0.0" y="0.0" width="100" height="100"/>
                                                 </imageView>
+                                                <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="bye-3m-EKl">
+                                                    <rect key="frame" x="32" y="31" width="37" height="37"/>
+                                                </activityIndicatorView>
                                             </subviews>
                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                         </view>
                                         <constraints>
                                             <constraint firstItem="T4o-xl-Re8" firstAttribute="leading" secondItem="68p-Rn-p1t" secondAttribute="leading" id="5GF-8q-hwl"/>
+                                            <constraint firstItem="bye-3m-EKl" firstAttribute="centerY" secondItem="68p-Rn-p1t" secondAttribute="centerY" id="F6p-q6-FQ4"/>
+                                            <constraint firstItem="bye-3m-EKl" firstAttribute="centerX" secondItem="68p-Rn-p1t" secondAttribute="centerX" id="W1k-IF-6nA"/>
                                             <constraint firstAttribute="trailing" secondItem="T4o-xl-Re8" secondAttribute="trailing" id="cLr-jN-Zd3"/>
                                             <constraint firstAttribute="bottom" secondItem="T4o-xl-Re8" secondAttribute="bottom" id="gn2-P8-oc7"/>
                                             <constraint firstItem="T4o-xl-Re8" firstAttribute="top" secondItem="68p-Rn-p1t" secondAttribute="top" id="m85-NO-iDx"/>
                                         </constraints>
                                         <connections>
+                                            <outlet property="loadingIndicator" destination="bye-3m-EKl" id="3W4-pI-Flh"/>
                                             <outlet property="photoImageView" destination="T4o-xl-Re8" id="qVY-bB-1OX"/>
                                         </connections>
                                     </collectionViewCell>

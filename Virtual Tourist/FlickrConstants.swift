@@ -30,7 +30,7 @@ extension FlickrClient {
         static let PhotoSize = "url_z"
         static let SafeSearch = "1"
         static let DataFormat = "json"
-        static let PerPage = "30"
+        static let PerPage = "50"
         static let Page = "page"
         static let BBox = "bbox"
     }

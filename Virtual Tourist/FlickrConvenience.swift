@@ -13,14 +13,14 @@ import UIKit
 extension FlickrClient {
     
     // MARK: - GET Images by Lat/Lon Data
-    func getImagesByLocation(latitude: Double, longitude: Double, completionHandler: (success: Bool, photosArray: [[String: AnyObject]], imagesFound: Bool, errorString: String?) -> Void) {
+    func getPhotosURLArrayByLocation(latitude: Double, longitude: Double, completionHandler: (success: Bool, photosArray: [[String: AnyObject]], imagesFound: Bool, errorString: String?) -> Void) {
         
         // Set the parameters
         methodArguments[ParameterKeys.BBox] = createBoundingBoxString(latitude, longitude: longitude)
         
         let request = configureURLRequestForGETImagesByLocation()
         
-        getImagesFromFlickrBySearch(request) { (result, error) in
+        getPhotosFromFlickrBySearch(request) { (result, error) in
             
             if let error = error {
                 completionHandler(success: false, photosArray: [], imagesFound: true, errorString: error.localizedDescription)
@@ -37,7 +37,21 @@ extension FlickrClient {
                             // Check if results contain an array of photo dictionaries
                             if let photosArray = photosDictionary[JSONResponseKeys.Photo] as? [[String: AnyObject]] {
                                 
-                                completionHandler(success: true, photosArray: photosArray, imagesFound: true, errorString: nil)
+                                var filteredPhotosArray = [[String: AnyObject]]()
+                                
+                                // If photo object contains an imageURLString, append to filteredPhotosArray until 30 imageURLStrings are obtained
+                                for photo in photosArray {
+                                    if filteredPhotosArray.count < 30 {
+                                        if photo[FlickrClient.JSONResponseKeys.ImageURL] != nil {
+
+                                            filteredPhotosArray.append(photo)
+                                        } else {
+                                            print("Photo object does not contain an imageURLString.")
+                                        }
+                                    }
+                                }
+                                
+                                completionHandler(success: true, photosArray: filteredPhotosArray, imagesFound: true, errorString: nil)
                             }
                             else {
                                 print("Cannot find key \(JSONResponseKeys.Photo) in \(photosDictionary)")
@@ -60,6 +74,23 @@ extension FlickrClient {
                 }
             }
         }
+    }
+    
+    func getImageWithURL(urlString: String, completionHandler: (downloadedImage: UIImage?, error: NSError?) -> Void) {
+        print(urlString)
+        let url = NSURL(string: urlString)
+        let request = NSMutableURLRequest(URL: url!)
+        
+        let task = session.dataTaskWithRequest(request) { (data, response, error) in
+            if let error = error {
+                print(error.localizedDescription)
+                completionHandler(downloadedImage: nil, error: error)
+            } else {
+                let image = UIImage(data: data!)
+                completionHandler(downloadedImage: image!, error: nil)
+            }
+        }
+        task.resume()
     }
     
     func configureURLRequestForGETImagesByLocation() -> NSMutableURLRequest {

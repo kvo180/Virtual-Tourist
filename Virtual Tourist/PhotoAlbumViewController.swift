@@ -152,19 +152,33 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
  
         let photo = pin.photos[indexPath.row]
         
-//        var image = UIImage()
-//        
-//        if photo.imageURLString == nil || photo.image == "" {
-//            image = UIImage(named: "noImage")!
-//        } else if photo.image != nil {
-//            image = photo.image!
-//        }
-        
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseID, forIndexPath: indexPath) as! PhotoCell
         
-        cell.photoImageView.image = photo.image
+        // Configure cell
+        cell.photoImageView.contentMode = .ScaleAspectFill
+        cell.photoImageView.image = UIImage(named: "blank_navy.jpg")
+        cell.loadingIndicator.hidesWhenStopped = true
+        cell.loadingIndicator.startAnimating()
+        
+        FlickrClient.sharedInstance().getImageWithURL(photo.imageURLString) { (downloadedImage, error) in
+            if let image = downloadedImage {
+                dispatch_async(dispatch_get_main_queue()) {
+                    cell.photoImageView.image = image
+                    cell.loadingIndicator.stopAnimating()
+                }
+            }
+        }
+        
         
         return cell
+        
+        //        var image = UIImage()
+        //
+        //        if photo.imageURLString == nil || photo.image == "" {
+        //            image = UIImage(named: "noImage")!
+        //        } else if photo.image != nil {
+        //            image = photo.image!
+        //        }
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {

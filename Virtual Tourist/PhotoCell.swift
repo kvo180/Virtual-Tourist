@@ -11,6 +11,7 @@ import UIKit
 class PhotoCell: UICollectionViewCell {
     
     @IBOutlet weak var photoImageView: UIImageView!
+    @IBOutlet weak var loadingIndicator: UIActivityIndicatorView!
     
     // Set cell appearance for selected state
     override var selected: Bool {
