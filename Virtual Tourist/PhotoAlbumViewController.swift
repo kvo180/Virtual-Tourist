@@ -87,10 +87,10 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             
             // Initiate a new download from Flickr
             getPhotosURLArrayFromFlickr(pin)
-            
-            // Add notification observer to be notified when all images are downloaded
-            NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
         }
+        
+        // Add notification observer to be notified when all images are downloaded
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -106,7 +106,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             noImagesLabel.hidden = true
             
             // Enable bottom button after delay
-            let delay = 1.0 * Double(NSEC_PER_SEC)
+            let delay = 1.5 * Double(NSEC_PER_SEC)
             let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
             
             dispatch_after(time, dispatch_get_main_queue()) {
@@ -149,12 +149,19 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             removeSelectedPhotos()
         }
         else {
-            // getNewCollection
+            getNewCollection()
         }
     }
     
     
     // MARK: - Helper Methods
+    
+    func getNewCollection() {
+        pin.photos = []
+        photoCollectionView.reloadData()
+        bottomButton.enabled = false
+        getPhotosURLArrayFromFlickr(pin)
+    }
     
     func removeSelectedPhotos() {
         // Get array of selected indexPaths (sorted descendingly in order to prevent array index out of range and to preserve correct indexPath reference)
@@ -200,7 +207,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         self.noImagesLabel.hidden = true
                         
                         // Enable bottom button after delay
-                        let delay = 1.0 * Double(NSEC_PER_SEC)
+                        let delay = 1.5 * Double(NSEC_PER_SEC)
                         let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
                         
                         dispatch_after(time, dispatch_get_main_queue()) {
