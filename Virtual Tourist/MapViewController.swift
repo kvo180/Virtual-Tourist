@@ -19,6 +19,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var pin: Pin!
     var pins = [Pin]()
     var photosFound = Bool()
+    var prefetched = Bool()
     
     // MARK: - UI Lifecycle
     
@@ -41,8 +42,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
-        
-        
+        // Default prefetched variable to false
+        prefetched = false
     }
     
     
@@ -219,6 +220,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             photoAlbumVC.pin = sender!.annotation as! Pin
             photoAlbumVC.photosFound = photosFound
             photoAlbumVC.mapViewRegion = mapView.region
+            photoAlbumVC.prefetched = prefetched
         }
     }
     
@@ -231,32 +233,34 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         let latitude = selectedPin.coordinate.latitude as Double
         let longitude = selectedPin.coordinate.longitude as Double
         FlickrClient.sharedInstance().getPhotosURLArrayByLocation(latitude, longitude: longitude) {
-            (success, photosArray, imagesFound, errorString) in
+            (success, photosArray, errorString) in
             
             if success {
                 
-                if imagesFound {
+                if !photosArray.isEmpty {
                     
                     self.photosFound = true
+                    self.prefetched = true
                     
                     // Create photo objects and append to selectedPin's photos array
                     for photo in photosArray {
-                            
+                        
                         let photoObject = Photo(dictionary: photo)
                         selectedPin.photos.append(photoObject)
                     }
-                    
+
                     print("Photos downloaded successfully.")
                 }
-                
+                    
                 else {
                     print("No images found.")
                     self.photosFound = false
+                    self.prefetched = true
                 }
             }
                 
             else {
-                print(errorString)
+                print(errorString!)
             }
         }
     }

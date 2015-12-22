@@ -26,6 +26,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     var pin: Pin!
     var photosFound = Bool()
     var mapViewRegion = MKCoordinateRegion()
+    var prefetched = Bool()
     
     // Global properties
     var width: CGFloat!
@@ -51,6 +52,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         annotations.append(annotation)
         mapView.showAnnotations(annotations, animated: true)
         
+        // Show mapView with same region as the mapView from MapViewController
         let span = MKCoordinateSpanMake(mapViewRegion.span.latitudeDelta * 0.2, mapViewRegion.span.longitudeDelta * 0.2)
         let region = MKCoordinateRegionMake(coordinate, span)
         mapView.setRegion(region, animated: true)
@@ -67,18 +69,49 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         
         photoCollectionView.allowsMultipleSelection = true
         
-        // Hide noImagesLabel
+        // Configure view elements
         noImagesLabel.hidden = true
+        bottomButton.enabled = false
+    
+        // If pin is selected immediately after it's created, the prefetch dataTask will not have returned any results and the pin's photos will be empty (and 'prefetched' will be false)
+        if pin.photos.isEmpty && prefetched == false {
+
+            // Cancel pre-fetch dataTask to avoid duplicate tasks
+            FlickrClient.sharedInstance().session.getAllTasksWithCompletionHandler() { tasksArray in
+                
+                if let prefetchDataTask = tasksArray.last {
+                    prefetchDataTask.cancel()
+                    print("previous dataTask canceled")
+                }
+            }
+            
+            // Initiate a new download from Flickr
+            getPhotosURLArrayFromFlickr(pin)
+            
+            // Add notification observer to be notified when all images are downloaded
+            NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
+        }
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
-        // Hide/show 'No images found' label
-        if photosFound {
-            noImagesLabel.hidden = true
-        } else {
+        if prefetched && !photosFound {
+            
             noImagesLabel.hidden = false
+            bottomButton.enabled = false
+            
+        } else if prefetched && photosFound {
+            
+            noImagesLabel.hidden = true
+            
+            // Enable bottom button after delay
+            let delay = 1.0 * Double(NSEC_PER_SEC)
+            let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
+            
+            dispatch_after(time, dispatch_get_main_queue()) {
+                self.bottomButton.enabled = true
+            }
         }
     }
     
@@ -104,6 +137,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             // Configure bottom button
             bottomButton.setTitle("New Collection", forState: .Normal)
             bottomButton.setTitleColor(nil, forState: .Normal)
+            bottomButton.enabled = true
         }
     }
     
@@ -121,6 +155,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     
     // MARK: - Helper Methods
+    
     func removeSelectedPhotos() {
         // Get array of selected indexPaths (sorted descendingly in order to prevent array index out of range and to preserve correct indexPath reference)
         let deleteIndexPaths = photoCollectionView.indexPathsForSelectedItems()!.sort({
@@ -139,10 +174,71 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         bottomButton.enabled = false
     }
     
+    func reloadAlbum(notification: NSNotification) {
+        print("reload called")
+
+        dispatch_async(dispatch_get_main_queue()) {
+            
+            self.photoCollectionView.reloadData()
+        }
+    }
     
-    // MARK: UICollectionViewDelegate/DataSource Methods
+    // Get images from Flickr
+    func getPhotosURLArrayFromFlickr(selectedPin: Pin) {
+        
+        let latitude = selectedPin.coordinate.latitude as Double
+        let longitude = selectedPin.coordinate.longitude as Double
+        FlickrClient.sharedInstance().getPhotosURLArrayByLocation(latitude, longitude: longitude) {
+            (success, photosArray, errorString) in
+            
+            if success {
+                
+                if !photosArray.isEmpty {
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        
+                        self.noImagesLabel.hidden = true
+                        
+                        // Enable bottom button after delay
+                        let delay = 1.0 * Double(NSEC_PER_SEC)
+                        let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
+                        
+                        dispatch_after(time, dispatch_get_main_queue()) {
+                            self.bottomButton.enabled = true
+                        }
+                    }
+                    
+                    // Create photo objects and append to selectedPin's photos array
+                    for photo in photosArray {
+                        
+                        let photoObject = Photo(dictionary: photo)
+                        selectedPin.photos.append(photoObject)
+                    }
+                    NSNotificationCenter.defaultCenter().postNotificationName("getPhotosCompleted", object: nil)
+                    
+                    print("Photos downloaded successfully.")
+                }
+                
+                else {
+                    print("No images found.")
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        self.noImagesLabel.hidden = false
+                    }
+                }
+            }
+                
+            else {
+                print(errorString!)
+            }
+        }
+    }
+    
+    
+    // MARK: - UICollectionViewDelegate/DataSource Methods
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        
         return pin.photos.count
     }
     
