@@ -36,7 +36,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     // MARK: - UI Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         automaticallyAdjustsScrollViewInsets = false
         
         // Configure nav bar button
@@ -72,26 +72,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         noImagesLabel.hidden = true
         bottomButton.enabled = false
         navigationItem.rightBarButtonItem!.enabled = false
-    
-        // If pin is selected immediately after it's created, the prefetch dataTask will not have returned any results and the pin's photos will be empty (and 'prefetched' will be false)
-        if pin.photos.isEmpty && prefetched == false {
-
-            // Cancel pre-fetch dataTask to avoid duplicate tasks
-            FlickrClient.sharedInstance().session.getAllTasksWithCompletionHandler() { tasksArray in
-                
-                if let prefetchDataTask = tasksArray.last {
-                    prefetchDataTask.cancel()
-                    print("previous dataTask canceled")
-                }
-            }
-            
-            // Initiate a new download from Flickr
-            getPhotosURLArrayFromFlickr(pin)
-        }
-        else if !pin.photos.isEmpty && prefetched == false {
-            bottomButton.enabled = true
-            navigationItem.rightBarButtonItem!.enabled = true
-        }
         
         // Add notification observer to be notified when all images are downloaded
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
@@ -99,25 +79,56 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
-        
-        if prefetched && pin.photos.isEmpty {
+
+        if pin.photos.isEmpty {
             
-            noImagesLabel.text = "No photos found."
-            noImagesLabel.hidden = false
-            bottomButton.enabled = false
-            navigationItem.rightBarButtonItem!.enabled = false
+            // Pin's photos empty due to no photos returned
+            if pin.getPhotosCompleted {
+                print("prefetch complete - no photos found")
+
+                noImagesLabel.text = "No photos found."
+                noImagesLabel.hidden = false
+                bottomButton.enabled = false
+                navigationItem.rightBarButtonItem!.enabled = false
+            }
+            else {
+                // If pin is selected immediately after it's created, the prefetch dataTask will not have returned any results and the pin's photos will be empty
+                
+                // Cancel pre-fetch dataTask to avoid duplicate tasks
+                FlickrClient.sharedInstance().session.getAllTasksWithCompletionHandler() { tasksArray in
+                    
+                    if let prefetchDataTask = tasksArray.last {
+                        prefetchDataTask.cancel()
+                        print("previous dataTask canceled")
+                    }
+                }
+                
+                // Initiate a new download from Flickr
+                getPhotosURLArrayFromFlickr(pin)
+            }
+        }
+        else {
             
-        } else if prefetched && !pin.photos.isEmpty {
-            
-            noImagesLabel.hidden = true
-            
-            // Enable bottom button after delay
-            let delay = 1.5 * Double(NSEC_PER_SEC)
-            let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
-            
-            dispatch_after(time, dispatch_get_main_queue()) {
-                self.bottomButton.enabled = true
-                self.navigationItem.rightBarButtonItem!.enabled = true
+            // If photos are returned by the prefetch dataTask method, update views
+            if prefetched {
+                print("prefetch complete - photos returned")
+                
+                noImagesLabel.hidden = true
+                
+                // Enable bottom button and bar button after delay
+                let delay = 1.5 * Double(NSEC_PER_SEC)
+                let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
+                
+                dispatch_after(time, dispatch_get_main_queue()) {
+                    self.bottomButton.enabled = true
+                    self.navigationItem.rightBarButtonItem!.enabled = true
+                }
+            }
+            else {
+                // Pin already contains photos
+                print("pin contains images")
+                bottomButton.enabled = true
+                navigationItem.rightBarButtonItem!.enabled = true
             }
         }
     }
@@ -222,7 +233,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         
                         self.noImagesLabel.hidden = true
                         
-                        // Enable bottom button after delay
+                        // Enable bottom button and bar button after delay
                         let delay = 1.5 * Double(NSEC_PER_SEC)
                         let time = dispatch_time(DISPATCH_TIME_NOW, Int64(delay))
                         
@@ -238,13 +249,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         let photoObject = Photo(dictionary: photo)
                         selectedPin.photos.append(photoObject)
                     }
-                    NSNotificationCenter.defaultCenter().postNotificationName("getPhotosCompleted", object: nil)
                     
+                    NSNotificationCenter.defaultCenter().postNotificationName("getPhotosCompleted", object: nil)
                     print("Photos downloaded successfully.")
                 }
                 
                 else {
-                    print("No images found2.")
+                    print("No images found.")
                     
                     dispatch_async(dispatch_get_main_queue()) {
                         
@@ -253,6 +264,8 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         self.navigationItem.rightBarButtonItem!.enabled = false
                     }
                 }
+                
+                self.pin.getPhotosCompleted = true
             }
                 
             else {
@@ -287,6 +300,12 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             if let image = downloadedImage {
                 dispatch_async(dispatch_get_main_queue()) {
                     cell.photoImageView.image = image
+                    cell.loadingIndicator.stopAnimating()
+                }
+            }
+            else {
+                dispatch_async(dispatch_get_main_queue()) {
+                    cell.photoImageView.image = UIImage(named: "no_image.png")
                     cell.loadingIndicator.stopAnimating()
                 }
             }

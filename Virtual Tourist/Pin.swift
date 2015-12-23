@@ -12,4 +12,7 @@ import MapKit
 class Pin: MKPointAnnotation {
 
     var photos = [Photo]()
+    
+    // Keep track of if method to get photos for the Pin has been called - initialize bool property to false
+    var getPhotosCompleted: Bool = false
 }

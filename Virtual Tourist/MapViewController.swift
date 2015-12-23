@@ -170,6 +170,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             // Since annotation view will be automatically selected after dragging occurs, set to true so that push to PhotoAlbumViewController doesn't occur
             dragged = true
             
+            selectedPin.getPhotosCompleted = false
+            
             // Pre-fetch new photos for pin
             getPhotosURLArrayFromFlickr(selectedPin)
             
@@ -251,8 +253,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     
                 else {
                     print("No images found.")
-                    self.prefetched = true
                 }
+                
+                self.pin.getPhotosCompleted = true
             }
                 
             else {

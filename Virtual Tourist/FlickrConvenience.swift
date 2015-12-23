@@ -86,8 +86,13 @@ extension FlickrClient {
                 print(error.localizedDescription)
                 completionHandler(downloadedImage: nil, error: error)
             } else {
-                let image = UIImage(data: data!)
-                completionHandler(downloadedImage: image!, error: nil)
+                if let image = UIImage(data: data!) {
+                    completionHandler(downloadedImage: image, error: nil)
+                }
+                else {
+                    print("image does not exist at URL")
+                    completionHandler(downloadedImage: nil, error: nil)
+                }
             }
         }
         task.resume()
