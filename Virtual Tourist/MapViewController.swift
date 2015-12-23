@@ -18,7 +18,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var deleteMode = false
     var pin: Pin!
     var pins = [Pin]()
-    var photosFound = Bool()
     var prefetched = Bool()
     
     // MARK: - UI Lifecycle
@@ -218,7 +217,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
             photoAlbumVC.pin = sender!.annotation as! Pin
-            photoAlbumVC.photosFound = photosFound
             photoAlbumVC.mapViewRegion = mapView.region
             photoAlbumVC.prefetched = prefetched
         }
@@ -239,7 +237,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 
                 if !photosArray.isEmpty {
                     
-                    self.photosFound = true
                     self.prefetched = true
                     
                     // Create photo objects and append to selectedPin's photos array
@@ -254,7 +251,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     
                 else {
                     print("No images found.")
-                    self.photosFound = false
                     self.prefetched = true
                 }
             }

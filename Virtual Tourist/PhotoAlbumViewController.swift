@@ -24,7 +24,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     // Initialized by segue
     var coordinate = CLLocationCoordinate2D()
     var pin: Pin!
-    var photosFound = Bool()
     var mapViewRegion = MKCoordinateRegion()
     var prefetched = Bool()
     
@@ -72,6 +71,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         // Configure view elements
         noImagesLabel.hidden = true
         bottomButton.enabled = false
+        navigationItem.rightBarButtonItem!.enabled = false
     
         // If pin is selected immediately after it's created, the prefetch dataTask will not have returned any results and the pin's photos will be empty (and 'prefetched' will be false)
         if pin.photos.isEmpty && prefetched == false {
@@ -88,6 +88,10 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             // Initiate a new download from Flickr
             getPhotosURLArrayFromFlickr(pin)
         }
+        else if !pin.photos.isEmpty && prefetched == false {
+            bottomButton.enabled = true
+            navigationItem.rightBarButtonItem!.enabled = true
+        }
         
         // Add notification observer to be notified when all images are downloaded
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
@@ -96,12 +100,14 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
-        if prefetched && !photosFound {
+        if prefetched && pin.photos.isEmpty {
             
+            noImagesLabel.text = "No photos found."
             noImagesLabel.hidden = false
             bottomButton.enabled = false
+            navigationItem.rightBarButtonItem!.enabled = false
             
-        } else if prefetched && photosFound {
+        } else if prefetched && !pin.photos.isEmpty {
             
             noImagesLabel.hidden = true
             
@@ -111,6 +117,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             
             dispatch_after(time, dispatch_get_main_queue()) {
                 self.bottomButton.enabled = true
+                self.navigationItem.rightBarButtonItem!.enabled = true
             }
         }
     }
@@ -133,6 +140,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             
             // Reset collection view to deselect any cells that were selected
             photoCollectionView.reloadData()
+            
+            // Disable edit button if all photos have been removed
+            navigationItem.rightBarButtonItem!.enabled = !pin.photos.isEmpty
             
             // Configure bottom button
             bottomButton.setTitle("New Collection", forState: .Normal)
@@ -160,6 +170,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         pin.photos = []
         photoCollectionView.reloadData()
         bottomButton.enabled = false
+        navigationItem.rightBarButtonItem!.enabled = false
         getPhotosURLArrayFromFlickr(pin)
     }
     
@@ -179,6 +190,11 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         // Configure bottom button
         bottomButton.setTitle("Select Photos to Remove", forState: .Normal)
         bottomButton.enabled = false
+        
+        if pin.photos.isEmpty {
+            noImagesLabel.text = "All photos removed."
+            noImagesLabel.hidden = false
+        }
     }
     
     func reloadAlbum(notification: NSNotification) {
@@ -212,6 +228,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         
                         dispatch_after(time, dispatch_get_main_queue()) {
                             self.bottomButton.enabled = true
+                            self.navigationItem.rightBarButtonItem!.enabled = true
                         }
                     }
                     
@@ -227,10 +244,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                 }
                 
                 else {
-                    print("No images found.")
+                    print("No images found2.")
                     
                     dispatch_async(dispatch_get_main_queue()) {
+                        
+                        self.noImagesLabel.text = "No photos found."
                         self.noImagesLabel.hidden = false
+                        self.navigationItem.rightBarButtonItem!.enabled = false
                     }
                 }
             }
