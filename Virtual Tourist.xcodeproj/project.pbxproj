@@ -17,6 +17,7 @@
 		9F1CA37F1C282DF8005F72DF /* blank_navy.jpg in Resources */ = {isa = PBXBuildFile; fileRef = 9F1CA37E1C282DF8005F72DF /* blank_navy.jpg */; };
 		9F1CA3811C2A38B2005F72DF /* no_image.png in Resources */ = {isa = PBXBuildFile; fileRef = 9F1CA3801C2A38B2005F72DF /* no_image.png */; };
 		9F1CA3831C2BC1B4005F72DF /* CoreDataStackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CA3821C2BC1B4005F72DF /* CoreDataStackManager.swift */; };
+		9F1CA3851C2C3BAE005F72DF /* PointAnnotation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CA3841C2C3BAE005F72DF /* PointAnnotation.swift */; };
 		9FBC4B081C1609B3002F6081 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC4B071C1609B3002F6081 /* AppDelegate.swift */; };
 		9FBC4B0A1C1609B3002F6081 /* MapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBC4B091C1609B3002F6081 /* MapViewController.swift */; };
 		9FBC4B0D1C1609B3002F6081 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 9FBC4B0B1C1609B3002F6081 /* Main.storyboard */; };
@@ -57,6 +58,7 @@
 		9F1CA37E1C282DF8005F72DF /* blank_navy.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = blank_navy.jpg; sourceTree = "<group>"; };
 		9F1CA3801C2A38B2005F72DF /* no_image.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = no_image.png; sourceTree = "<group>"; };
 		9F1CA3821C2BC1B4005F72DF /* CoreDataStackManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStackManager.swift; sourceTree = "<group>"; };
+		9F1CA3841C2C3BAE005F72DF /* PointAnnotation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PointAnnotation.swift; sourceTree = "<group>"; };
 		9FBC4B041C1609B3002F6081 /* Virtual Tourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Virtual Tourist.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FBC4B071C1609B3002F6081 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		9FBC4B091C1609B3002F6081 /* MapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = MapViewController.swift; path = "Virtual Tourist/MapViewController.swift"; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				9F1A5F431C1A4DB500B635AC /* Clients */,
 				9F1A5F491C1A6EE400B635AC /* Pin.swift */,
 				9F1A5F4B1C1A727100B635AC /* Photo.swift */,
+				9F1CA3841C2C3BAE005F72DF /* PointAnnotation.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -349,6 +352,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9F1A5F501C1ACFBC00B635AC /* ImageCache.swift in Sources */,
+				9F1CA3851C2C3BAE005F72DF /* PointAnnotation.swift in Sources */,
 				9FBC4B0A1C1609B3002F6081 /* MapViewController.swift in Sources */,
 				9F1A5F421C1A4D9D00B635AC /* FlickrClient.swift in Sources */,
 				9F1A5F4C1C1A727100B635AC /* Photo.swift in Sources */,

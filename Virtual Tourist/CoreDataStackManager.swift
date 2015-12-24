@@ -103,4 +103,21 @@ class CoreDataStackManager {
             }
         }
     }
+    
+    
+    // MARK: - Core Data Retrieving support
+    
+    func fetchAllPins() -> [Pin] {
+        
+        // Create fetch request
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        
+        // Execute the fetch request
+        do {
+            return try managedObjectContext.executeFetchRequest(fetchRequest) as! [Pin]
+        } catch let error as NSError {
+            print("Error in fetchAllPins(): \(error)")
+            return [Pin]()
+        }
+    }
 }
