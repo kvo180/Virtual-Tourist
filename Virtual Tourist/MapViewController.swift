@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class MapViewController: UIViewController, MKMapViewDelegate {
 
@@ -19,23 +20,27 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var pin: Pin!
     var pins = [Pin]()
     var prefetched = Bool()
+    var annotation: MKPointAnnotation!
+    
     
     // MARK: - UI Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Configure nav bar buttons
-        navigationItem.rightBarButtonItem = editButtonItem()
-        navigationItem.rightBarButtonItem!.enabled = false
-        
         mapView.delegate = self
         
-        // Add and configure gesture recognizers
+        // Add and configure gesture recognizer
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: "addPin:")
         longPressGesture.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPressGesture)
-    
+        
+        pins = fetchAllPins()
+        
+        // Configure nav bar button
+        navigationItem.rightBarButtonItem = editButtonItem()
+        navigationItem.rightBarButtonItem!.enabled = !pins.isEmpty
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -43,6 +48,30 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         // Default prefetched variable to false
         prefetched = false
+    }
+    
+    
+    // MARK: - Core Data Convenience
+    lazy var sharedContext: NSManagedObjectContext = {
+        return CoreDataStackManager.sharedInstance().managedObjectContext
+    }()
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    
+    func fetchAllPins() -> [Pin] {
+        
+        // Create fetch request
+        let fetchRequest = NSFetchRequest(entityName: "Pin")
+        
+        // Execute the fetch request
+        do {
+            return try sharedContext.executeFetchRequest(fetchRequest) as! [Pin]
+        } catch let error as NSError {
+            print("Error in fetchAllPins(): \(error)")
+            return [Pin]()
+        }
     }
     
     
@@ -87,36 +116,52 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             case .Began:
                 print("gesture began")
                 
-                // Create pin object from coordinates and add to map view
-                pin = Pin()
-                pin.coordinate = coordinates
+                // Create annotation from coordinates and add to map view
+                annotation = MKPointAnnotation()
+                annotation.coordinate = coordinates
                 
-                // Set title property to make annotation draggable
-                pin.title = "pin"
+                print(coordinates)
+                
+                // Create new Pin object
+                pin = Pin(coordinate: coordinates, getPhotosCompleted: false, context: sharedContext)
+                
+                print(pin)
                 
                 // Add pin to array
                 pins.append(pin)
                 
+                // Save pin
+                saveContext()
+                
                 dispatch_async(dispatch_get_main_queue()) {
-                    self.mapView.addAnnotation(self.pin)
+                    self.mapView.addAnnotation(self.annotation)
                     self.navigationItem.rightBarButtonItem!.enabled = true
                 }
+                
                 print("annotation added")
                 
             case .Changed:
                 print("gesture changed")
+                print(coordinates)
                 
-                if pin != nil {
-                    // Update annotation coordinates
-                    dispatch_async(dispatch_get_main_queue()) {
-                        self.pin.coordinate = coordinates
-                    }
+                // Update annotation coordinates
+                dispatch_async(dispatch_get_main_queue()) {
+                    self.annotation.coordinate = coordinates
+                    self.pin.setCoordinate(coordinates)
                 }
+                
+                print(pin.coordinate)
                 
             case .Ended:
                 print("gesture ended")
                 
-                // Save pin and pre-fetch images
+                dispatch_async(dispatch_get_main_queue()) {
+                    
+                    self.mapView.removeAnnotation(self.annotation)
+                    self.mapView.addAnnotation(self.pin)
+                }
+                
+                // Pre-fetch images
                 getPhotosURLArrayFromFlickr(pin)
                 
             default:
@@ -135,7 +180,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView!.animatesDrop = true
+            pinView!.animatesDrop = false
             pinView!.draggable = true
             pinView!.canShowCallout = false
             pinView!.pinTintColor = UIColor.redColor()
@@ -150,6 +195,45 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         return pinView
     }
     
+    func mapView(mapView: MKMapView, didAddAnnotationViews views: [MKAnnotationView]) {
+        
+        for view in views {
+
+            if view.selected {
+                
+                // Animate drop
+                var i = -1;
+                for view in views {
+                    i++;
+                    let mkView = view 
+                    if view.annotation is MKUserLocation {
+                        continue;
+                    }
+                    
+                    // Check if current annotation is inside visible map rect, else go to next one
+                    let point:MKMapPoint  =  MKMapPointForCoordinate(mkView.annotation!.coordinate);
+                    if (!MKMapRectContainsPoint(self.mapView.visibleMapRect, point)) {
+                        continue;
+                    }
+                    
+                    let endFrame:CGRect = mkView.frame;
+                    
+                    // Move annotation out of view
+                    mkView.frame = CGRectMake(mkView.frame.origin.x, mkView.frame.origin.y - self.view.frame.size.height, mkView.frame.size.width, mkView.frame.size.height);
+                    
+                    // Animate drop
+                    let delay = 0.2 * Double(i)
+                    UIView.animateWithDuration(0.5, delay: delay, options: UIViewAnimationOptions.CurveEaseIn, animations:{() in
+                        mkView.frame = endFrame}, completion: nil)
+                }
+                
+            } else {
+                // Set annotation view to selected so that they're draggable after being added
+                view.setSelected(true, animated: false)
+            }
+        }
+    }
+    
     func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
         let selectedPin = view.annotation as! Pin
@@ -158,8 +242,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         case .Starting:
             print("drag starting")
             
-            // Delete old photos from pin
-            selectedPin.photos = []
+//            // Delete old photos from pin
+//            selectedPin.photos = []
             
         case .Canceling, .Ending:
             print("drag ended")
@@ -172,6 +256,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             
             selectedPin.getPhotosCompleted = false
             
+            saveContext()
+            
             // Pre-fetch new photos for pin
             getPhotosURLArrayFromFlickr(selectedPin)
             
@@ -181,7 +267,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
-        
+
         if deleteMode == false {
             
             // Deselect annotation from map view so that it can be tapped again without having to first be deselected by the user
@@ -190,7 +276,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             // Set annotation view as selected so that it is draggable
             view.setSelected(true, animated: true)
             
-            // If annotation view is selected by tapping (instead of by dragging), push PhotoAlbumViewController to top of nav stack
+            // If annotation view is selected by tapping (instead of by dragging), segue to PhotoAlbumViewController
             if dragged == false {
                 
                 performSegueWithIdentifier("showAlbum", sender: view)
@@ -207,6 +293,16 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             print("annotation removed")
             
             mapView.removeAnnotation(view.annotation!)
+            
+            sharedContext.deleteObject(selectedPin)
+            saveContext()
+        }
+    }
+    
+    func mapViewDidFinishRenderingMap(mapView: MKMapView, fullyRendered: Bool) {
+        
+        if fullyRendered {
+            mapView.addAnnotations(pins)
         }
     }
     
@@ -218,7 +314,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             let photoAlbumVC = segue.destinationViewController as! PhotoAlbumViewController
             
             photoAlbumVC.coordinate = (sender as! MKAnnotationView).annotation!.coordinate
-            photoAlbumVC.pin = sender!.annotation as! Pin
+            photoAlbumVC.pin = (sender as! MKAnnotationView).annotation! as! Pin
             photoAlbumVC.mapViewRegion = mapView.region
             photoAlbumVC.prefetched = prefetched
         }
@@ -230,8 +326,8 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     // Get images from Flickr
     func getPhotosURLArrayFromFlickr(selectedPin: Pin) {
         
-        let latitude = selectedPin.coordinate.latitude as Double
-        let longitude = selectedPin.coordinate.longitude as Double
+        let latitude = selectedPin.latitude as Double
+        let longitude = selectedPin.longitude as Double
         FlickrClient.sharedInstance().getPhotosURLArrayByLocation(latitude, longitude: longitude) {
             (success, photosArray, errorString) in
             
@@ -244,8 +340,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     // Create photo objects and append to selectedPin's photos array
                     for photo in photosArray {
                         
-                        let photoObject = Photo(dictionary: photo)
-                        selectedPin.photos.append(photoObject)
+                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+//                        selectedPin.photos.append(photoObject)
+                        
+                        photoObject.pin = selectedPin
                     }
 
                     print("Photos downloaded successfully.")
@@ -255,7 +353,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     print("No images found.")
                 }
                 
-                self.pin.getPhotosCompleted = true
+                selectedPin.getPhotosCompleted = true
             }
                 
             else {

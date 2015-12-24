@@ -8,6 +8,7 @@
 
 
 import UIKit
+import CoreData
 
 class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
     
@@ -52,6 +53,16 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
         
         titleLabel.text = photoAlbum[imageIndex].title
     }
+    
+    
+//    // MARK: - Core Data Convenience
+//    lazy var sharedContext: NSManagedObjectContext = {
+//        return CoreDataStackManager.sharedInstance().managedObjectContext
+//    }()
+//    
+//    func saveContext() {
+//        CoreDataStackManager.sharedInstance().saveContext()
+//    }
     
     
     // MARK: - UIScrollViewDelegate Methods

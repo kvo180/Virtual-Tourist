@@ -8,6 +8,7 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
     
@@ -133,6 +134,16 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         }
     }
     
+    
+    // MARK: - Core Data Convenience
+    lazy var sharedContext: NSManagedObjectContext = {
+        return CoreDataStackManager.sharedInstance().managedObjectContext
+    }()
+    
+    func saveContext() {
+        CoreDataStackManager.sharedInstance().saveContext()
+    }
+    
 
     // MARK: - Set Editing
     override func setEditing(editing: Bool, animated: Bool) {
@@ -220,8 +231,8 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     // Get images from Flickr
     func getPhotosURLArrayFromFlickr(selectedPin: Pin) {
         
-        let latitude = selectedPin.coordinate.latitude as Double
-        let longitude = selectedPin.coordinate.longitude as Double
+        let latitude = selectedPin.latitude as Double
+        let longitude = selectedPin.longitude as Double
         FlickrClient.sharedInstance().getPhotosURLArrayByLocation(latitude, longitude: longitude) {
             (success, photosArray, errorString) in
             
@@ -246,8 +257,10 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                     // Create photo objects and append to selectedPin's photos array
                     for photo in photosArray {
                         
-                        let photoObject = Photo(dictionary: photo)
-                        selectedPin.photos.append(photoObject)
+                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+//                        selectedPin.photos.append(photoObject)
+                        
+                        photoObject.pin = self.pin
                     }
                     
                     NSNotificationCenter.defaultCenter().postNotificationName("getPhotosCompleted", object: nil)
