@@ -145,6 +145,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     
 
     // MARK: - MKMapViewViewDelegate Methods
+    
+    func mapViewDidFinishRenderingMap(mapView: MKMapView, fullyRendered: Bool) {
+        
+        if fullyRendered {
+            
+            // Create PointAnnotation objects from persisted Pin objects and add to mapView
+            for pin in pins {
+                let annotation = PointAnnotation(pin: pin)
+                let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
+                annotation.coordinate = coordinate
+                mapView.addAnnotation(annotation)
+            }
+        }
+    }
+    
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
         
         let reuseId = "pin"
@@ -166,55 +181,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
         
         return pinView
-    }
-    
-    func mapView(mapView: MKMapView, didAddAnnotationViews views: [MKAnnotationView]) {
-        
-        for view in views {
-            
-            if view.selected {
-                
-            } else {
-                // Set annotation view to selected so that they're draggable after being added
-                print("not selected")
-                view.setSelected(true, animated: false)
-            }
-        }
-    }
-    
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-        
-        let selectedPin = (view.annotation as! PointAnnotation).pin
-        
-        switch newState {
-        case .Starting:
-            print("drag starting")
-            
-//            // Delete old photos from pin
-//            selectedPin.photos = []
-            
-        case .Canceling, .Ending:
-            print("drag ended")
-            
-            let draggedAnnotation = view.annotation
-            print("annotation dropped at: \(draggedAnnotation!.coordinate.latitude), \(draggedAnnotation!.coordinate.longitude)")
-            
-            selectedPin.latitude = draggedAnnotation!.coordinate.latitude
-            selectedPin.longitude = draggedAnnotation!.coordinate.longitude
-            
-            // Since annotation view will be automatically selected after dragging occurs, set to true so that push to PhotoAlbumViewController doesn't occur
-            dragged = true
-            
-            selectedPin!.getPhotosCompleted = false
-            
-            saveContext()
-            
-            // Pre-fetch new photos for pin
-            getPhotosURLArrayFromFlickr(selectedPin!)
-            
-        default:
-            return
-        }
     }
     
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView) {
@@ -251,17 +217,48 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         }
     }
     
-    func mapViewDidFinishRenderingMap(mapView: MKMapView, fullyRendered: Bool) {
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
         
-        if fullyRendered {
+        let selectedPin = (view.annotation as! PointAnnotation).pin
+        
+        switch newState {
+        case .Starting:
+            print("drag starting")
             
-            // Create PointAnnotation objects from persisted Pin objects and add to mapView
-            for pin in pins {
-                let annotation = PointAnnotation(pin: pin)
-                let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
-                annotation.coordinate = coordinate
-                mapView.addAnnotation(annotation)
+            print(selectedPin.photos.count)
+            
+            // Delete old photos from pin
+            for photo in selectedPin.photos {
+                
+                // Remove association with Pin object
+                photo.pin = nil
+                
+                // Remove Photo object from context
+                sharedContext.deleteObject(photo)
             }
+            
+        case .Canceling, .Ending:
+            print("drag ended")
+            
+            let draggedAnnotation = view.annotation
+            print("annotation dropped at: \(draggedAnnotation!.coordinate.latitude), \(draggedAnnotation!.coordinate.longitude)")
+            
+            selectedPin.latitude = draggedAnnotation!.coordinate.latitude
+            selectedPin.longitude = draggedAnnotation!.coordinate.longitude
+            
+            // Since annotation view will be automatically selected after dragging occurs, set to true so that push to PhotoAlbumViewController doesn't occur
+            dragged = true
+            
+            selectedPin!.getPhotosCompleted = false
+            
+            // Save the context
+            saveContext()
+            
+            // Pre-fetch new photos for pin
+            getPhotosURLArrayFromFlickr(selectedPin!)
+            
+        default:
+            return
         }
     }
     
@@ -300,10 +297,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     for photo in photosArray {
                         
                         let photoObject = Photo(dictionary: photo, context: self.sharedContext)
-//                        selectedPin.photos.append(photoObject)
                         
+                        // Add photoObject to Pin's photos array
                         photoObject.pin = selectedPin
                     }
+                    
+                    // Save the context
+                    self.saveContext()
 
                     print("Photos downloaded successfully.")
                 }
@@ -320,6 +320,5 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             }
         }
     }
-
 }
 

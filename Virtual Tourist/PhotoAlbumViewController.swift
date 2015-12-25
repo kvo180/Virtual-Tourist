@@ -73,19 +73,17 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         noImagesLabel.hidden = true
         bottomButton.enabled = false
         navigationItem.rightBarButtonItem!.enabled = false
-        
-        // Add notification observer to be notified when all images are downloaded
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "reloadAlbum:", name: "getPhotosCompleted", object: nil)
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
 
         if pin.photos.isEmpty {
+            print("photos empty")
             
             // Pin's photos empty due to no photos returned
             if pin.getPhotosCompleted {
-                print("prefetch complete - no photos found")
+                print("fetch complete - no photos found")
 
                 noImagesLabel.text = "No photos found."
                 noImagesLabel.hidden = false
@@ -109,6 +107,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
             }
         }
         else {
+            print("pin contains \(pin.photos.count) photos" )
             
             // If photos are returned by the prefetch dataTask method, update views
             if prefetched {
@@ -189,8 +188,17 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     // MARK: - Helper Methods
     
     func getNewCollection() {
-        pin.photos = []
-        photoCollectionView.reloadData()
+        
+        for photo in pin.photos {
+            
+            // Remove association with Pin object
+            photo.pin = nil
+            
+            // Remove Photo object from context
+            sharedContext.deleteObject(photo)
+        }
+
+
         bottomButton.enabled = false
         navigationItem.rightBarButtonItem!.enabled = false
         getPhotosURLArrayFromFlickr(pin)
@@ -203,8 +211,17 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         })
 
         for indexPath in deleteIndexPaths {
-            pin.photos.removeAtIndex(indexPath.row)
+            let photo = pin.photos[indexPath.row]
+            
+            // Remove association with Pin object
+            photo.pin = nil
+            
+            // Remove Photo object from context
+            sharedContext.deleteObject(photo)
         }
+        
+        // Save the context
+        saveContext()
 
         photoCollectionView.deleteItemsAtIndexPaths(deleteIndexPaths)
         print("photos removed: \(deleteIndexPaths.count)")
@@ -216,15 +233,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         if pin.photos.isEmpty {
             noImagesLabel.text = "All photos removed."
             noImagesLabel.hidden = false
-        }
-    }
-    
-    func reloadAlbum(notification: NSNotification) {
-        print("reload called")
-
-        dispatch_async(dispatch_get_main_queue()) {
-            
-            self.photoCollectionView.reloadData()
         }
     }
     
@@ -240,9 +248,23 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                 
                 if !photosArray.isEmpty {
                     
+                    // Create photo objects and append to selectedPin's photos array
+                    for photo in photosArray {
+                        
+                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+                        
+                        // Add photoObject to Pin's photos array
+                        photoObject.pin = self.pin
+                    }
+                    
+                    // Save the context
+                    self.saveContext()
+                    
                     dispatch_async(dispatch_get_main_queue()) {
                         
                         self.noImagesLabel.hidden = true
+                        self.photoCollectionView.reloadData()
+                        print("reloaded")
                         
                         // Enable bottom button and bar button after delay
                         let delay = 1.5 * Double(NSEC_PER_SEC)
@@ -254,16 +276,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         }
                     }
                     
-                    // Create photo objects and append to selectedPin's photos array
-                    for photo in photosArray {
-                        
-                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
-//                        selectedPin.photos.append(photoObject)
-                        
-                        photoObject.pin = self.pin
-                    }
-                    
-                    NSNotificationCenter.defaultCenter().postNotificationName("getPhotosCompleted", object: nil)
                     print("Photos downloaded successfully.")
                 }
                 
