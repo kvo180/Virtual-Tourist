@@ -319,33 +319,40 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         cell.photoImageView.contentMode = .ScaleAspectFill
         cell.photoImageView.image = UIImage(named: "blank_navy.jpg")
         cell.loadingIndicator.hidesWhenStopped = true
-        cell.loadingIndicator.startAnimating()
         
-        FlickrClient.sharedInstance().getImageWithURL(photo.imageURLString) { (downloadedImage, error) in
-            if let image = downloadedImage {
-                dispatch_async(dispatch_get_main_queue()) {
-                    cell.photoImageView.image = image
-                    cell.loadingIndicator.stopAnimating()
+        // If Photo object already contains a cached photo, assign it to cell
+        if let storedImage = photo.image {
+            
+            cell.photoImageView.image = storedImage
+        }
+        else {
+            cell.loadingIndicator.startAnimating()
+            
+            // Download image and save it to the file system
+            FlickrClient.sharedInstance().getImageWithURL(photo.imageURLString) { (downloadedImage, error) in
+                if let image = downloadedImage {
+                    
+                    // Set the Photo object's imagePath and image. 
+                    // NOTE: Since the Application folder directory changes each time the app launches, absolute paths cannot be used (only relative paths to the Documents folder). Therefore, the path to the image's data is simply the file name.
+                    photo.imagePath = "\(photo.imageID).jpg"
+                    photo.image = image
+                    self.saveContext()
+                    
+                    dispatch_async(dispatch_get_main_queue()) {
+                        cell.photoImageView.image = image
+                        cell.loadingIndicator.stopAnimating()
+                    }
                 }
-            }
-            else {
-                dispatch_async(dispatch_get_main_queue()) {
-                    cell.photoImageView.image = UIImage(named: "no_image.png")
-                    cell.loadingIndicator.stopAnimating()
+                else {
+                    dispatch_async(dispatch_get_main_queue()) {
+                        cell.photoImageView.image = UIImage(named: "no_image.png")
+                        cell.loadingIndicator.stopAnimating()
+                    }
                 }
             }
         }
         
-        
         return cell
-        
-        //        var image = UIImage()
-        //
-        //        if photo.imageURLString == nil || photo.image == "" {
-        //            image = UIImage(named: "noImage")!
-        //        } else if photo.image != nil {
-        //            image = photo.image!
-        //        }
     }
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {

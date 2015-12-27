@@ -225,8 +225,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         case .Starting:
             print("drag starting")
             
-            print(selectedPin.photos.count)
-            
             // Delete old photos from pin
             for photo in selectedPin.photos {
                 

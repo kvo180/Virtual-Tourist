@@ -18,8 +18,9 @@ class Photo: NSManagedObject {
     }
     
     @NSManaged var title: String
-    @NSManaged var id: NSNumber
+    @NSManaged var imageID: String
     @NSManaged var imageURLString: String
+    @NSManaged var imagePath: String
     @NSManaged var pin: Pin?
     
     // Standard Core Data init method
@@ -37,17 +38,31 @@ class Photo: NSManagedObject {
         if title == "" {
             title = "Untitled"
         }
-        id = Int(dictionary[Keys.ID] as! String)!
+        imageID = dictionary[Keys.ID] as! String
         imageURLString = dictionary[Keys.ImageURL] as! String
     }
     
-//    var image: UIImage? {
-//        
-//        get {
-//            return FlickrClient.Caches.imageCache.imageWithIdentifier(imageURLString)
-//        }
-//        set {
-//            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imageURLString!)
-//        }
-//    }
+    var image: UIImage? {
+        
+        get {
+            return FlickrClient.Caches.imageCache.imageWithIdentifier(imagePath)
+        }
+        set {
+            FlickrClient.Caches.imageCache.storeImage(newValue, withIdentifier: imagePath)
+        }
+    }
+    
+    // Delete stored image data before removing Photo object from Core Data
+    override func prepareForDeletion() {
+        if image != nil {
+            let path = FlickrClient.Caches.imageCache.pathForIdentifier(imagePath)
+            let fileManager = NSFileManager.defaultManager()
+            do {
+                try fileManager.removeItemAtPath(path)
+                print("image data removed automatically")
+            } catch {
+                print(error)
+            }
+        }
+    }
 }
