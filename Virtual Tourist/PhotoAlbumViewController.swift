@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource {
+class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectionViewDelegate, UICollectionViewDataSource, NSFetchedResultsControllerDelegate {
     
     // MARK: - Properties
     
@@ -32,6 +32,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     var width: CGFloat!
     var height: CGFloat!
     var deleteMode = false
+    var insertedIndexPaths: [NSIndexPath]!
+    var deletedIndexPaths: [NSIndexPath]!
+    var updatedIndexPaths: [NSIndexPath]!
     
     
     // MARK: - UI Lifecycle
@@ -73,13 +76,21 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         noImagesLabel.hidden = true
         bottomButton.enabled = false
         navigationItem.rightBarButtonItem!.enabled = false
+        
+        fetchedResultsController.delegate = self
+        
+        // Start the fetched results controller
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {
+            print(error)
+        }
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
 
         if pin.photos.isEmpty {
-            print("photos empty")
             
             // Pin's photos empty due to no photos returned
             if pin.getPhotosCompleted {
@@ -189,15 +200,14 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     func getNewCollection() {
         
-        for photo in pin.photos {
+        for photo in fetchedResultsController.fetchedObjects as! [Photo] {
             
-            // Remove association with Pin object
+            // Remove relationship with Pin object
             photo.pin = nil
             
             // Remove Photo object from context
             sharedContext.deleteObject(photo)
         }
-
 
         bottomButton.enabled = false
         navigationItem.rightBarButtonItem!.enabled = false
@@ -211,7 +221,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         })
 
         for indexPath in deleteIndexPaths {
-            let photo = pin.photos[indexPath.row]
+            let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
             
             // Remove association with Pin object
             photo.pin = nil
@@ -223,7 +233,6 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
         // Save the context
         saveContext()
 
-        photoCollectionView.deleteItemsAtIndexPaths(deleteIndexPaths)
         print("photos removed: \(deleteIndexPaths.count)")
         
         // Configure bottom button
@@ -254,7 +263,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                         let photoObject = Photo(dictionary: photo, context: self.sharedContext)
                         
                         // Add photoObject to Pin's photos array
-                        photoObject.pin = self.pin
+                        photoObject.pin = selectedPin
                     }
                     
                     // Save the context
@@ -263,7 +272,7 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                     dispatch_async(dispatch_get_main_queue()) {
                         
                         self.noImagesLabel.hidden = true
-                        self.photoCollectionView.reloadData()
+//                        self.photoCollectionView.reloadData()
                         print("reloaded")
                         
                         // Enable bottom button and bar button after delay
@@ -302,16 +311,20 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     
     // MARK: - UICollectionViewDelegate/DataSource Methods
     
+    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
+        return fetchedResultsController.sections?.count ?? 0
+    }
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         
-        return pin.photos.count
+        let sectionInfo = fetchedResultsController.sections![section]
+        return sectionInfo.numberOfObjects
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         
         let reuseID = "PhotoCell"
  
-        let photo = pin.photos[indexPath.row]
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier(reuseID, forIndexPath: indexPath) as! PhotoCell
         
@@ -385,12 +398,83 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
     }
     
     
+    // MARK: - NSFetchedResultsController
+    
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+        
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        fetchRequest.sortDescriptors = []
+        fetchRequest.predicate = NSPredicate(format: "pin == %@", self.pin)
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.sharedContext, sectionNameKeyPath: nil, cacheName: nil)
+        
+        return fetchedResultsController
+    }()
+    
+    
+    // MARK: - NSFetchedResultsControllerDelegate Methods
+    
+    func controllerWillChangeContent(controller: NSFetchedResultsController) {
+        
+        insertedIndexPaths = [NSIndexPath]()
+        deletedIndexPaths = [NSIndexPath]()
+        updatedIndexPaths = [NSIndexPath]()
+        
+        print("controllerWillChangeContent")
+    }
+    
+    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
+        
+        switch type {
+            
+        case .Insert:
+            photoCollectionView.insertSections(NSIndexSet(index: sectionIndex))
+        case .Delete:
+            photoCollectionView.deleteSections(NSIndexSet(index: sectionIndex))
+        case .Update:
+            photoCollectionView.reloadSections(NSIndexSet(index: sectionIndex))
+        default:
+            return
+        }
+    }
+    
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        
+        switch type {
+            
+        case .Insert:
+            print("photo inserted")
+            insertedIndexPaths.append(newIndexPath!)
+        case .Delete:
+            print("photo deleted")
+            deletedIndexPaths.append(indexPath!)
+        case .Update:
+            print("photo updated")
+            updatedIndexPaths.append(indexPath!)
+        default:
+            return
+        }
+    }
+    
+    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+        
+        photoCollectionView.performBatchUpdates({
+            () in
+            
+            self.photoCollectionView.insertItemsAtIndexPaths(self.insertedIndexPaths)
+            self.photoCollectionView.deleteItemsAtIndexPaths(self.deletedIndexPaths)
+            self.photoCollectionView.reloadItemsAtIndexPaths(self.updatedIndexPaths)
+            
+            }, completion: nil)
+    }
+    
+    
     // MARK: - Segue
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         
         // Show PhotoDetailViewController with selected photo
         let detailVC = segue.destinationViewController as! PhotoDetailViewController
-        detailVC.photoAlbum = pin.photos
+        detailVC.photoAlbum = fetchedResultsController.fetchedObjects as! [Photo]
         detailVC.imageIndex = (sender as! NSIndexPath).row
     }
 }

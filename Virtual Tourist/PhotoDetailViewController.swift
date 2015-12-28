@@ -36,7 +36,7 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
         for (index, photo) in photoAlbum.enumerate() {
             
             let imageView = UIImageView(frame: CGRectMake(scrollViewWidth * CGFloat(index), scrollView.frame.origin.y, scrollViewWidth, scrollViewHeight))
-//            imageView.image = photo.image
+            imageView.image = photo.image
             imageView.contentMode = UIViewContentMode.ScaleAspectFit
             imageView.clipsToBounds = true
             
@@ -53,16 +53,6 @@ class PhotoDetailViewController: UIViewController, UIScrollViewDelegate {
         
         titleLabel.text = photoAlbum[imageIndex].title
     }
-    
-    
-//    // MARK: - Core Data Convenience
-//    lazy var sharedContext: NSManagedObjectContext = {
-//        return CoreDataStackManager.sharedInstance().managedObjectContext
-//    }()
-//    
-//    func saveContext() {
-//        CoreDataStackManager.sharedInstance().saveContext()
-//    }
     
     
     // MARK: - UIScrollViewDelegate Methods

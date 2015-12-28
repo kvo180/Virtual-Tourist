@@ -20,6 +20,10 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     var prefetched = Bool()
     var pins = [Pin]()
     var annotation: PointAnnotation!
+    var mapRegionArray: [MapRegion]!
+    var mapRegion: MapRegion!
+    var initialLaunch: Bool!!
+    var region: MKCoordinateRegion!
     
     
     // MARK: - UI Lifecycle
@@ -28,18 +32,37 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         super.viewDidLoad()
         
         mapView.delegate = self
+        initialLaunch = true
         
         // Add and configure gesture recognizer
         let longPressGesture = UILongPressGestureRecognizer(target: self, action: "addPin:")
         longPressGesture.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longPressGesture)
         
-        pins = CoreDataStackManager.sharedInstance().fetchAllPins()
-        
         // Configure nav bar button
         navigationItem.rightBarButtonItem = editButtonItem()
         navigationItem.rightBarButtonItem!.enabled = !pins.isEmpty
         
+        // Fetch stored pins
+        pins = CoreDataStackManager.sharedInstance().fetchAllPins()
+        
+        // Initialize MapView object
+        mapRegionArray = CoreDataStackManager.sharedInstance().fetchMapRegion()
+        
+        if mapRegionArray.isEmpty {
+            
+            // Create MapRegion object and save to context
+            mapRegion = MapRegion(region: mapView.region, context: sharedContext)
+            saveContext()
+            print("MapRegion object created")
+        } else {
+            mapRegion = mapRegionArray.last
+            
+            // Configure mapView region
+            let center = CLLocationCoordinate2DMake(mapRegion.latitude, mapRegion.longitude)
+            let span = MKCoordinateSpanMake(mapRegion.latitudeDelta, mapRegion.longitudeDelta)
+            region = MKCoordinateRegionMake(center, span)
+        }
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -147,17 +170,44 @@ class MapViewController: UIViewController, MKMapViewDelegate {
     // MARK: - MKMapViewViewDelegate Methods
     
     func mapViewDidFinishRenderingMap(mapView: MKMapView, fullyRendered: Bool) {
-        
+
         if fullyRendered {
+            if mapView.annotations.isEmpty {
+                
+                // Upon initial loading, create PointAnnotation objects from persisted Pin objects and add to mapView
+                for pin in pins {
+                    let annotation = PointAnnotation(pin: pin)
+                    let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
+                    annotation.coordinate = coordinate
+                    mapView.addAnnotation(annotation)
+                    
+                    print("stored PointAnnotation added")
+                }
+            }
             
-            // Create PointAnnotation objects from persisted Pin objects and add to mapView
-            for pin in pins {
-                let annotation = PointAnnotation(pin: pin)
-                let coordinate = CLLocationCoordinate2DMake(pin.latitude, pin.longitude)
-                annotation.coordinate = coordinate
-                mapView.addAnnotation(annotation)
+            if initialLaunch == true {
+                
+                if !mapRegionArray.isEmpty {
+                    // Set mapView region
+                    mapView.setRegion(region, animated: true)
+                    print("restored region: \(region)")
+                }
+                initialLaunch = false
             }
         }
+    }
+    
+    func mapView(mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+        
+        // Update mapRegion and save to context
+        mapRegion.latitude = mapView.region.center.latitude
+        mapRegion.longitude = mapView.region.center.longitude
+        mapRegion.latitudeDelta = mapView.region.span.latitudeDelta
+        mapRegion.longitudeDelta = mapView.region.span.longitudeDelta
+        
+        saveContext()
+        
+        print("map region updated")
     }
     
     func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {

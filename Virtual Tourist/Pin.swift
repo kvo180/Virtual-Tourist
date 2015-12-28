@@ -12,12 +12,6 @@ import MapKit
 
 class Pin: NSManagedObject {
     
-    struct Keys {
-        static let Latitude = "latitude"
-        static let Longiture = "longitude"
-        static let Photos = "photos"
-    }
-    
     @NSManaged var latitude: Double
     @NSManaged var longitude: Double
     @NSManaged var photos: [Photo]
@@ -36,9 +30,8 @@ class Pin: NSManagedObject {
         let entity = NSEntityDescription.entityForName("Pin", inManagedObjectContext: context)!
         super.init(entity: entity, insertIntoManagedObjectContext: context)
         
-        self.latitude = coordinate.latitude
-        self.longitude = coordinate.longitude
+        latitude = coordinate.latitude
+        longitude = coordinate.longitude
         self.getPhotosCompleted = getPhotosCompleted
-  
     }
 }

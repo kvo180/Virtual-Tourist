@@ -106,7 +106,7 @@ class CoreDataStackManager {
     
     
     // MARK: - Core Data Retrieving support
-    
+
     func fetchAllPins() -> [Pin] {
         
         // Create fetch request
@@ -118,6 +118,20 @@ class CoreDataStackManager {
         } catch let error as NSError {
             print("Error in fetchAllPins(): \(error)")
             return [Pin]()
+        }
+    }
+    
+    func fetchMapRegion() -> [MapRegion] {
+        
+        // Create fetch request
+        let fetchRequest = NSFetchRequest(entityName: "MapRegion")
+        
+        // Execute the fetch request
+        do {
+            return try managedObjectContext.executeFetchRequest(fetchRequest) as! [MapRegion]
+        } catch let error as NSError {
+            print("Error in fetchAllPins(): \(error)")
+            return [MapRegion]()
         }
     }
 }
