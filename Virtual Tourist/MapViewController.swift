@@ -341,18 +341,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     
                     self.prefetched = true
                     
-                    // Create photo objects and append to selectedPin's photos array
-                    for photo in photosArray {
+                    self.sharedContext.performBlockAndWait({
                         
-                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+                        // Create photo objects and append to selectedPin's photos array
+                        for photo in photosArray {
+                            
+                            let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+                            
+                            // Add photoObject to Pin's photos array
+                            photoObject.pin = selectedPin
+                        }
                         
-                        // Add photoObject to Pin's photos array
-                        photoObject.pin = selectedPin
-                    }
+                        // Save the context
+                        self.saveContext()
+                    })
                     
-                    // Save the context
-                    self.saveContext()
-
                     print("Photos downloaded successfully.")
                 }
                     
@@ -360,7 +363,9 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     print("No images found.")
                 }
                 
-                selectedPin.getPhotosCompleted = true
+                self.sharedContext.performBlockAndWait({
+                    selectedPin.getPhotosCompleted = true
+                })
             }
                 
             else {

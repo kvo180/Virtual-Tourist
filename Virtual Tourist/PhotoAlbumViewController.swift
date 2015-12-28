@@ -257,23 +257,24 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                 
                 if !photosArray.isEmpty {
                     
-                    // Create photo objects and append to selectedPin's photos array
-                    for photo in photosArray {
+                    self.sharedContext.performBlockAndWait({
                         
-                        let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+                        // Create photo objects and append to selectedPin's photos array
+                        for photo in photosArray {
+                            
+                            let photoObject = Photo(dictionary: photo, context: self.sharedContext)
+                            
+                            // Add photoObject to Pin's photos array
+                            photoObject.pin = selectedPin
+                        }
                         
-                        // Add photoObject to Pin's photos array
-                        photoObject.pin = selectedPin
-                    }
-                    
-                    // Save the context
-                    self.saveContext()
+                        // Save the context
+                        self.saveContext()
+                    })
                     
                     dispatch_async(dispatch_get_main_queue()) {
                         
                         self.noImagesLabel.hidden = true
-//                        self.photoCollectionView.reloadData()
-                        print("reloaded")
                         
                         // Enable bottom button and bar button after delay
                         let delay = 1.5 * Double(NSEC_PER_SEC)
@@ -299,7 +300,9 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                     }
                 }
                 
-                self.pin.getPhotosCompleted = true
+                self.sharedContext.performBlockAndWait({
+                    self.pin.getPhotosCompleted = true
+                })
             }
                 
             else {
@@ -347,9 +350,13 @@ class PhotoAlbumViewController: UIViewController, MKMapViewDelegate, UICollectio
                     
                     // Set the Photo object's imagePath and image. 
                     // NOTE: Since the Application folder directory changes each time the app launches, absolute paths cannot be used (only relative paths to the Documents folder). Therefore, the path to the image's data is simply the file name.
-                    photo.imagePath = "\(photo.imageID).jpg"
-                    photo.image = image
-                    self.saveContext()
+                    
+                    self.sharedContext.performBlockAndWait({
+                        
+                        photo.imagePath = "\(photo.imageID).jpg"
+                        photo.image = image
+                        self.saveContext()
+                    })
                     
                     dispatch_async(dispatch_get_main_queue()) {
                         cell.photoImageView.image = image
